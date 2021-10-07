@@ -39,7 +39,7 @@ struct SM_GPS
 };
 
 struct UnitFlags
-{
+{	//reorder this to match up with pm.cpp and garbage can have 3 bits
 	unsigned char	ProcessManagement : 1,	//NONCRITICAL
 					Laser : 1,				//NONCRITICAL
 					VehicleControl : 1,		//NONCRITICAL
@@ -47,18 +47,20 @@ struct UnitFlags
 					OpenGL : 1,				//NONCRITICAL
 					Camera : 1,				//NONCRITICAL
 					Garbage : 2;
-};
+}; //adds up to 8 bits
 
 union ExecFlags
 {
 	UnitFlags Flags;
-	unsigned short Status;
+	//unsigned short Status; // 2 bytes
+	unsigned char Status; //8 bits
 };
 
 struct ProcessManagement
 {
-	ExecFlags Heartbeat;
+	ExecFlags Heartbeat; //Flags.Laser = 0; //1 or Status = 0x00 -> 0xFF. shutdown equals to 0xFF. can selectively shutdown processes. Status = 0x35
 	ExecFlags Shutdown;
+	//double PMTimeStamp;
 	long int LifeCounter;
 };
 
