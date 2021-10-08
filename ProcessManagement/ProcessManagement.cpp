@@ -31,6 +31,7 @@ TCHAR Units[10][20] = //
 
 int main()
 {
+	SMObject PMObj(_TEXT("PMObj"), sizeof());
 	//start all 5 modules
 	StartProcesses();
 	return 0;

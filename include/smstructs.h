@@ -44,7 +44,7 @@ struct UnitFlags
 					Laser : 1,				//NONCRITICAL
 					VehicleControl : 1,		//NONCRITICAL
 					GPS : 1,				//NONCRITICAL
-					OpenGL : 1,				//NONCRITICAL
+					Display : 1,				//NONCRITICAL
 					Camera : 1,				//NONCRITICAL
 					Garbage : 2;
 }; //adds up to 8 bits
@@ -59,9 +59,17 @@ union ExecFlags
 struct ProcessManagement
 {
 	ExecFlags Heartbeat; //Flags.Laser = 0; //1 or Status = 0x00 -> 0xFF. shutdown equals to 0xFF. can selectively shutdown processes. Status = 0x35
-	ExecFlags Shutdown;
+	ExecFlags Shutdown;	//flag to shutdown modules
 	//double PMTimeStamp;
 	long int LifeCounter;
+};
+
+struct SM_Heartbeats
+{
+	ProcessManagement PMSM;
+	SM_GPS GPSSM;
+	SM_VehicleControl VehicleSM;
+	SM_Laser LaserSM;
 };
 
 #define NONCRITICALMASK 0xff	//0 011 0000
