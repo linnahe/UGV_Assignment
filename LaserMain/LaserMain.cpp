@@ -1,11 +1,10 @@
-//lecture 2 20/09
-//lecture 3 27/09
 #using <System.dll>
 #include <Windows.h>
 #include <conio.h>
 
 #include <SMObject.h>
 #include <smstructs.h>
+#include "Laser.h"
 
 using namespace System;
 using namespace System::Diagnostics;

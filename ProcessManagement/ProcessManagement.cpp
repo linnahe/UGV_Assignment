@@ -6,10 +6,11 @@
 #include <iostream>
 #include <conio.h>
 
-#include "SMStructs.h"
-#include "SMObject.h"
+#include <SMStructs.h>
+#include <SMObject.h>
 
 using namespace System;
+using namespace System::Diagnostics;
 using namespace System::Net::Sockets;
 using namespace System::Net;
 using namespace System::Text;
@@ -31,19 +32,26 @@ TCHAR Units[10][20] = //
 
 int main()
 {
-	/*
 	// instantiate SMObject
-	SMObject PMObj(_TEXT("PMObj"), sizeof(SM_Heartbeats));
+	SMObject PMObj(_TEXT("PMObj"), sizeof(ProcessManagement));
+	SMObject GPSObj(_TEXT("GPSObj"), sizeof(SM_GPS));
+	SMObject LaserObj(_TEXT("LaserObj"), sizeof(SM_Laser));
+	SMObject VehicleObj(_TEXT("VehicleObj"), sizeof(SM_VehicleControl));
 
 	// create shared memory
 	PMObj.SMCreate(); // check SMCreateError flag for error trapping
 	PMObj.SMAccess(); //check SMAccessError flag for error trapping
 
 	// ptr to SM struct
-	SM_Heartbeats* SMHBPtr = (SM_Heartbeats*)PMObj.pData; */
+	ProcessManagement* PMSMPtr = (ProcessManagement*)PMObj.pData;
+
+	//PM specific tasks here
+	// e.g. SMHBPtr->PMTimeStamp = (double)Stopwatch::GetTimestamp();
 
 	//start all 5 modules
 	StartProcesses();
+
+	Console::WriteLine("Process management terminated normally.");
 	return 0;
 }
 
