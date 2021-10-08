@@ -31,12 +31,16 @@ TCHAR Units[10][20] = //
 
 int main()
 {
+	/*
 	// instantiate SMObject
 	SMObject PMObj(_TEXT("PMObj"), sizeof(SM_Heartbeats));
 
 	// create shared memory
 	PMObj.SMCreate(); // check SMCreateError flag for error trapping
 	PMObj.SMAccess(); //check SMAccessError flag for error trapping
+
+	// ptr to SM struct
+	SM_Heartbeats* SMHBPtr = (SM_Heartbeats*)PMObj.pData; */
 
 	//start all 5 modules
 	StartProcesses();
