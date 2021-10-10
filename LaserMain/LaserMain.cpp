@@ -6,17 +6,25 @@
 #include <smstructs.h>
 //#include "Laser.h"
 
+#define LASER_PORT "23000"
+#define PLATFORM_ADDRESS "192.168.1.200"
+
 using namespace System;
 using namespace System::Diagnostics;
 using namespace System::Threading;
 
 int main()
 {
+	// connect to laser
+	// laser(PLATFORM_ADDRESS, LASER_PORT);
+
 	// instantiate shared memory object
-	SMObject PMObj(TEXT("PMObj"), sizeof(ProcessManagement));
+	SMObject PMObj(_TEXT("PMObj"), sizeof(ProcessManagement));
+	SMObject LaserObj(_TEXT("LaserObj"), sizeof(SM_Laser));
 
 	// access shared memory
 	PMObj.SMAccess();
+	LaserObj.SMAccess();
 
 	array<double>^ TSValues = gcnew array<double>(100);
 	int TSCounter = 0;

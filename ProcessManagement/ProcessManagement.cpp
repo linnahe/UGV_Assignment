@@ -68,6 +68,7 @@ int main()
 	else { // restart GPS (non-critical process)
 		PMSMPtr->PMSM.Shutdown.Flags.Display = 1;
 		PMSMPtr->PMSM.Shutdown.Status = 0xFF;
+		StartProcesses();
 	}
 
 
