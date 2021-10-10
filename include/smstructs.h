@@ -64,7 +64,7 @@ struct ProcessManagement
 	long int LifeCounter;
 };
 
-struct SM_Heartbeats
+struct SM_Modules
 {
 	ProcessManagement PMSM;
 	SM_GPS GPSSM;

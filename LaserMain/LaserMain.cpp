@@ -4,7 +4,7 @@
 
 #include <SMObject.h>
 #include <smstructs.h>
-#include "Laser.h"
+//#include "Laser.h"
 
 using namespace System;
 using namespace System::Diagnostics;
@@ -12,8 +12,12 @@ using namespace System::Threading;
 
 int main()
 {
-	//declaration
-	SMObject PMObj(TEXT("ProcessManagement"), sizeof(ProcessManagement));
+	// instantiate shared memory object
+	SMObject PMObj(TEXT("PMObj"), sizeof(ProcessManagement));
+
+	// access shared memory
+	PMObj.SMAccess();
+
 	array<double>^ TSValues = gcnew array<double>(100);
 	int TSCounter = 0;
 	double TimeStamp, TimeGap; //divide by frequency(?)
@@ -23,6 +27,10 @@ int main()
 
 	QueryPerformanceFrequency((LARGE_INTEGER*)&Frequency);
 	QueryPerformanceCounter((LARGE_INTEGER*)&OldCounter);
+
+	// initialise module flag
+
+
 
 	while (1)
 	{
@@ -36,17 +44,18 @@ int main()
 				//True-> put my flag up
 				// PMData->Heartbeats.Flags.Laser==1;
 				//False->if the PM time stamp older by agreed time period
-					// if(TimeStamp - PMData->PMTimeStamp > 250)
+					// if(TimeStamp - PMData->PMTimeStamp > 250) // if PMData->PMTimeStamp is processed between PM publishes its first time stamp, the reading will be wrong here
 						//true->serious critical process failure -> Shutdown.Status = 0xFF;
 					//false->keep going (dont need this line)
 		Console::WriteLine("Laser time stamp : {0,12:F3} {1,12:X2}", TimeStamp, Shutdown); //0 is the first parameter, 12 is the feed rate, then 3 is the decimal places
 		Thread::Sleep(25);
-		if (PMData->Shutdown.Status) //if shutdown is non-zero then it will break and quit
+		if (ProcessManagement->Shutdown.Status) //if shutdown is non-zero then it will break and quit
 			break;
-		if (_kbhit())
+		if (_kbhit()) {
+			Console::ReadKey();
 			break;
+		}
 	}
-	//Console::ReadKey();
 	for (int i = 0; i < 100; i++)
 		Console::WriteLine("{0,12:F3", TSValues[i]);
 

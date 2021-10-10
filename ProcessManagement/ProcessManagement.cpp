@@ -33,23 +33,43 @@ TCHAR Units[10][20] = //
 int main()
 {
 	// instantiate SMObject
-	SMObject PMObj(_TEXT("PMObj"), sizeof(ProcessManagement));
-	SMObject GPSObj(_TEXT("GPSObj"), sizeof(SM_GPS));
-	SMObject LaserObj(_TEXT("LaserObj"), sizeof(SM_Laser));
-	SMObject VehicleObj(_TEXT("VehicleObj"), sizeof(SM_VehicleControl));
+	SMObject PMObj(_TEXT("PMObj"), sizeof(SM_Modules));
 
-	// create shared memory
+	// create and access shared memory
 	PMObj.SMCreate(); // check SMCreateError flag for error trapping
 	PMObj.SMAccess(); //check SMAccessError flag for error trapping
 
 	// ptr to SM struct
-	ProcessManagement* PMSMPtr = (ProcessManagement*)PMObj.pData;
+	SM_Modules* PMSMPtr = (SM_Modules*)PMObj.pData;
+
+	// set module flags
+	PMSMPtr->PMSM.Shutdown.Flags.ProcessManagement = false;
+	PMSMPtr->PMSM.Heartbeat.Status = 0x00; 
+	
 
 	//PM specific tasks here
 	// e.g. SMHBPtr->PMTimeStamp = (double)Stopwatch::GetTimestamp();
 
 	//start all 5 modules
 	StartProcesses();
+
+	// detect laser heartbeat
+	if (PMSMPtr->PMSM.Heartbeat.Flags.Laser == 1) {
+		PMSMPtr->PMSM.Heartbeat.Flags.Laser = 0;
+	}
+	else {
+		PMSMPtr->PMSM.Shutdown.Status = 0xFF; // shutdown laser (critical process)
+	}
+
+	// detect GPS heartbeat
+	if (PMSMPtr->PMSM.Heartbeat.Flags.GPS == 1) {
+		PMSMPtr->PMSM.Heartbeat.Flags.GPS = 0;
+	}
+	else { // restart GPS (non-critical process)
+		PMSMPtr->PMSM.Shutdown.Flags.Display = 1;
+		PMSMPtr->PMSM.Shutdown.Status = 0xFF;
+	}
+
 
 	Console::WriteLine("Process management terminated normally.");
 	return 0;
