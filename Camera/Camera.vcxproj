@@ -117,7 +117,17 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\SMObject.cpp" />
     <ClCompile Include="Camera.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\include\GL\GL.H" />
+    <ClInclude Include="..\include\GL\GLU.H" />
+    <ClInclude Include="..\include\GL\glut.h" />
+    <ClInclude Include="..\include\SMFcn.h" />
+    <ClInclude Include="..\include\SMObject.h" />
+    <ClInclude Include="..\include\smstructs.h" />
+    <ClInclude Include="..\include\turbojpeg.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

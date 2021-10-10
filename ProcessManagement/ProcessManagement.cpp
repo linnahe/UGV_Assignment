@@ -27,7 +27,7 @@ TCHAR Units[10][20] = //
 	TEXT("Display.exe"),
 	TEXT("Camera.exe"),
 	TEXT("Laser.exe"),
-	TEXT("VehicleControl.exe")
+	TEXT("Vehicle.exe")
 };
 
 int main()
@@ -103,9 +103,9 @@ int main()
 		}
 
 		// exit loop if PM shutdown
-		if (PMSMPtr->PMSM.Shutdown.Flags.ProcessManagement == 1) {
-			break;
-		}
+		//if (PMSMPtr->PMSM.Shutdown.Flags.ProcessManagement == 1) {
+		//	break;
+		//}
 
 	}
 
