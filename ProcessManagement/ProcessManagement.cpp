@@ -53,24 +53,53 @@ int main()
 	//start all 5 modules
 	StartProcesses();
 
-	// detect laser heartbeat
-	if (PMSMPtr->PMSM.Heartbeat.Flags.Laser == 1) {
-		PMSMPtr->PMSM.Heartbeat.Flags.Laser = 0;
-	}
-	else {
-		PMSMPtr->PMSM.Shutdown.Status = 0xFF; // shutdown laser (critical process)
+	while (_kbhit()) {
+		// detect laser heartbeat
+		if (PMSMPtr->PMSM.Heartbeat.Flags.Laser == 1) {
+			PMSMPtr->PMSM.Heartbeat.Flags.Laser = 0;
+		}
+		else {
+			PMSMPtr->PMSM.Shutdown.Status = 0xFF; // shutdown critical process
+		}
+
+		// detect GPS heartbeat
+		if (PMSMPtr->PMSM.Heartbeat.Flags.GPS == 1) {
+			PMSMPtr->PMSM.Heartbeat.Flags.GPS = 0;
+		}
+		else {
+			PMSMPtr->PMSM.Shutdown.Flags.Display = 1;
+			PMSMPtr->PMSM.Shutdown.Status = 0xFF;
+			StartProcesses(); // restart non-critical process
+		}
+
+		// detect camera heartbeat
+		if (PMSMPtr->PMSM.Heartbeat.Flags.Camera == 1) {
+			PMSMPtr->PMSM.Heartbeat.Flags.Camera = 0;
+		}
+		else {
+			PMSMPtr->PMSM.Shutdown.Status = 0xFF; // shutdown critical process
+		}
+
+		// detect vehicle heartbeat
+		if (PMSMPtr->PMSM.Heartbeat.Flags.VehicleControl == 1) {
+			PMSMPtr->PMSM.Heartbeat.Flags.VehicleControl = 0;
+		}
+		else {
+			PMSMPtr->PMSM.Shutdown.Status = 0xFF; // shutdown critical process
+		}
+
+		// detect display heartbeat
+		if (PMSMPtr->PMSM.Heartbeat.Flags.Display == 1) {
+			PMSMPtr->PMSM.Heartbeat.Flags.Display = 0;
+		}
+		else {
+			PMSMPtr->PMSM.Shutdown.Status = 0xFF; // shutdown critical process
+		}
+
 	}
 
-	// detect GPS heartbeat
-	if (PMSMPtr->PMSM.Heartbeat.Flags.GPS == 1) {
-		PMSMPtr->PMSM.Heartbeat.Flags.GPS = 0;
-	}
-	else { // restart GPS (non-critical process)
-		PMSMPtr->PMSM.Shutdown.Flags.Display = 1;
-		PMSMPtr->PMSM.Shutdown.Status = 0xFF;
-		StartProcesses();
-	}
-
+	// shutdown PM after exiting while loop
+	PMSMPtr->Shutdown.Status = 0xFF;
 
 	Console::WriteLine("Process management terminated normally.");
 	return 0;
