@@ -31,11 +31,14 @@ int main()
 		TimeGap = (double)(Counter-OldCounter) / (double)Frequency*1000; //typecast. milliseconds
 		if (TSCounter <100)
 			TSValues[TSCounter++] = TimeGap;
-		//did PM put my flag down?
-			//True-> put my flag up
-			//False->if the PM time stamp older by agreed time period
-				//true->serious critical process failure -> Shutdown.Status = 0xFF;
-				//false->keep going (dont need this line)
+			//did PM put my flag down?
+			//if (PMData->Heartbeats.Flags.Laser==0)
+				//True-> put my flag up
+				// PMData->Heartbeats.Flags.Laser==1;
+				//False->if the PM time stamp older by agreed time period
+					// if(TimeStamp - PMData->PMTimeStamp > 250)
+						//true->serious critical process failure -> Shutdown.Status = 0xFF;
+					//false->keep going (dont need this line)
 		Console::WriteLine("Laser time stamp : {0,12:F3} {1,12:X2}", TimeStamp, Shutdown); //0 is the first parameter, 12 is the feed rate, then 3 is the decimal places
 		Thread::Sleep(25);
 		if (PMData->Shutdown.Status) //if shutdown is non-zero then it will break and quit
