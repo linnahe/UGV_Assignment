@@ -26,8 +26,8 @@ int main()
 		TimeStamp = (double)Counter / (double)Frequency * 1000; //typecast. milliseconds
 		Console::WriteLine("Vehicle time stamp : {0,12:F3} {1,12:X2}", TimeStamp, Shutdown); //0 is the first parameter, 12 is the feed rate, then 3 is the decimal places
 		Thread::Sleep(25);
-		if (PMData->Shutdown.Status)
-			break;
+		//if (PMData->Shutdown.Status)
+		//	break;
 		if (_kbhit())
 			break;
 	}

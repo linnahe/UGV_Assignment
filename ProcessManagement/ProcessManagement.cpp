@@ -34,6 +34,11 @@ int main()
 {
 	// instantiate SMObject
 	SMObject PMObj(_TEXT("PMObj"), sizeof(SM_Modules));
+	/*
+	SMObject LaserObj(_TEXT("LaserObj"), sizeof(SM_Laser));
+	SMObject GPSObj(_TEXT("GPSObj"), sizeof(SM_GPS));
+	SMObject VehicleObj(_TEXT("VehicleObj"), sizeof(SM_VehicleControl))
+	*/
 
 	// create and access shared memory
 	PMObj.SMCreate(); // check SMCreateError flag for error trapping
@@ -42,9 +47,10 @@ int main()
 	// ptr to SM struct
 	SM_Modules* PMSMPtr = (SM_Modules*)PMObj.pData;
 
-	// set module flags
+	// set flags at start of program
 	PMSMPtr->PMSM.Shutdown.Flags.ProcessManagement = false;
 	PMSMPtr->PMSM.Heartbeat.Status = 0x00; 
+	PMSMPtr->PMSM.Shutdown.Status = 0x00;
 	
 
 	//PM specific tasks here
@@ -59,7 +65,7 @@ int main()
 			PMSMPtr->PMSM.Heartbeat.Flags.Laser = 0;
 		}
 		else {
-			PMSMPtr->PMSM.Shutdown.Status = 0xFF; // shutdown critical process
+			PMSMPtr->PMSM.Shutdown.Status = 0xFF; // shutdown; critical process
 		}
 
 		// detect GPS heartbeat
@@ -77,7 +83,7 @@ int main()
 			PMSMPtr->PMSM.Heartbeat.Flags.Camera = 0;
 		}
 		else {
-			PMSMPtr->PMSM.Shutdown.Status = 0xFF; // shutdown critical process
+			PMSMPtr->PMSM.Shutdown.Status = 0xFF; // shutdown; critical process
 		}
 
 		// detect vehicle heartbeat
@@ -85,7 +91,7 @@ int main()
 			PMSMPtr->PMSM.Heartbeat.Flags.VehicleControl = 0;
 		}
 		else {
-			PMSMPtr->PMSM.Shutdown.Status = 0xFF; // shutdown critical process
+			PMSMPtr->PMSM.Shutdown.Status = 0xFF; // shutdown; critical process
 		}
 
 		// detect display heartbeat
@@ -93,13 +99,18 @@ int main()
 			PMSMPtr->PMSM.Heartbeat.Flags.Display = 0;
 		}
 		else {
-			PMSMPtr->PMSM.Shutdown.Status = 0xFF; // shutdown critical process
+			PMSMPtr->PMSM.Shutdown.Status = 0xFF; // shutdown; critical process
+		}
+
+		// exit loop if PM shutdown
+		if (PMSMPtr->PMSM.Shutdown.Flags.ProcessManagement == 1) {
+			break;
 		}
 
 	}
 
 	// shutdown PM after exiting while loop
-	PMSMPtr->Shutdown.Status = 0xFF;
+	PMSMPtr->PMSM.Shutdown.Status = 0xFF;
 
 	Console::WriteLine("Process management terminated normally.");
 	return 0;
