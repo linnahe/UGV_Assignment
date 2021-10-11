@@ -59,6 +59,8 @@ int main()
 
 	// ptr to SM struct
 	SM_Modules* PMSMPtr = (SM_Modules*)PMObj.pData;
+	if (PMSMPtr->PMSM.Shutdown.Status)
+		exit(0);
 
 	// set flags at start of program
 	PMSMPtr->PMSM.Shutdown.Flags.ProcessManagement = 0;
