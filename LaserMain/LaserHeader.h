@@ -17,12 +17,17 @@ public: //prefer to have function declarations in this file, then definitions in
 	bool getShutdownFlag() override;
 	int setHeartbeat(bool heartbeat) override;
 	*/
+
+	Laser(String^ IPAddress, int PortAddress);
+	~Laser();
 	double StartAngle;	//StringArray[23]
 	double Resolution;	//StringArray[24]
 	int NumRanges;		//StringArray[25]
-	~Laser();
+	void XYData();	
 
 protected:
 	// YOUR CODE HERE (ADDITIONAL MEMBER VARIABLES THAT YOU MAY WANT TO ADD)
-
+	TcpClient^ Client;
+	NetworkStream^ Stream;
+	array<String^>^ SplitResponseData;
 };
