@@ -60,6 +60,7 @@ struct ProcessManagement
 {
 	ExecFlags Heartbeat; //Flags.Laser = 0; //1 or Status = 0x00 -> 0xFF. shutdown equals to 0xFF. can selectively shutdown processes. Status = 0x35
 	ExecFlags Shutdown;	//flag to shutdown modules
+	ExecFlags PMHeartbeat; //flag to check if PM shutdown
 	//double PMTimeStamp;
 	long int LifeCounter;
 };

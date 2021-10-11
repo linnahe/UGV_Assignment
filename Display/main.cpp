@@ -38,6 +38,9 @@
 #include "Messages.hpp"
 #include "HUD.hpp"
 
+#include "smstructs.h"
+#include "SMObject.h"
+
 void display();
 void reshape(int width, int height);
 void idle();
@@ -174,6 +177,12 @@ double getTime()
 }
 
 void idle() {
+
+	SMObject PMObj(_TEXT("PMObj"), sizeof(ProcessManagement));
+	PMObj.SMAccess();
+	ProcessManagement* PMSMPtr = (ProcessManagement*)PMObj.pData;
+	if (PMSMPtr->Shutdown.Status)
+		exit(0);
 
 	if (KeyManager::get()->isAsciiKeyPressed('a')) {
 		Camera::get()->strafeLeft();
