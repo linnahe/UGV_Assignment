@@ -74,7 +74,7 @@ int main()
 	SendData = System::Text::Encoding::ASCII->GetBytes(AskScan);
 
 	//Loop
-	while (!PMSMPtr->PMSM.Shutdown.Flags.Laser) //put laser shutdown flag here to make it not shutdown
+	while (PMSMPtr->PMSM.Shutdown.Flags.Laser) //put laser shutdown flag here to make it not shutdown
 	{
 		//class: data acquisition or get range part. need to do range calculation
 
