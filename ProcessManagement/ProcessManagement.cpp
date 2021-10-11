@@ -30,15 +30,28 @@ TCHAR Units[10][20] = //
 	TEXT("Vehicle.exe")
 };
 
+value struct UGVProcesses
+{
+	String^ ModuleName;
+	int Critical;
+	int CrashCount;
+	int CrashCountLimit;
+	Process^ ProcessName;
+};
+
 int main()
 {
-	// instantiate SMObject
+
+	//tele-operation, declaration and initialisation
 	SMObject PMObj(_TEXT("PMObj"), sizeof(SM_Modules));
-	/*
-	SMObject LaserObj(_TEXT("LaserObj"), sizeof(SM_Laser));
-	SMObject GPSObj(_TEXT("GPSObj"), sizeof(SM_GPS));
-	SMObject VehicleObj(_TEXT("VehicleObj"), sizeof(SM_VehicleControl))
-	*/
+	array<UGVProcesses>^ ProcessList = gcnew array<UGVProcesses>
+	{
+		{"Laser", 1, 0, 10, gcnew Process},
+		{ "Display", 1, 0, 10, gcnew Process },
+		{ "Vehicle", 1, 0, 10, gcnew Process },
+		{ "GPS", 0, 0, 10, gcnew Process },
+		{ "Camera", 0, 0, 10, gcnew Process }
+	};
 
 	// create and access shared memory
 	PMObj.SMCreate(); // check SMCreateError flag for error trapping

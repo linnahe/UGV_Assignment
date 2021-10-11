@@ -26,7 +26,7 @@ int main(int argc, char** argv)
 	SMObject PMObj(_TEXT("PMObj"), sizeof(SM_Modules));
 	PMObj.SMAccess();
 	SM_Modules* PMSMPtr = (SM_Modules*)PMObj.pData;
-	PMSMPtr->PMSM.Shutdown.Flags.Camera = 0; // set camera shutdown status
+	//PMSMPtr->PMSM.Shutdown.Flags.Camera = 0; // set camera shutdown status
 
 	//Define window size
 	const int WINDOW_WIDTH = 800;

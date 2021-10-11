@@ -74,7 +74,7 @@ int main()
 	SendData = System::Text::Encoding::ASCII->GetBytes(AskScan);
 
 	//Loop
-	while (PMSMPtr->PMSM.Shutdown.Flags.Laser) //put laser shutdown flag here to make it not shutdown
+	while (!_kbhit()) //put laser shutdown flag here to make it not shutdown
 	{
 		//class: data acquisition or get range part. need to do range calculation
 
@@ -108,6 +108,8 @@ int main()
 			Range[i] = System::Convert::ToInt32(StringArray[26 + i], 16);
 			RangeX[i] = Range[i] * sin(i * Resolution);
 			RangeY[i] = Range[i] * cos(i * Resolution);
+			Console::WriteLine("X coordinate is " + RangeX[i]);
+			Console::WriteLine("Y coordinate is " + RangeY[i]);
 		}
 
 		if (_kbhit()) {
