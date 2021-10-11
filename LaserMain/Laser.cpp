@@ -21,9 +21,9 @@ using namespace System::Text;
 int main()
 {
 	//shared memory object
-	SMObject PMObj(_TEXT("PMObj"), sizeof(SM_Modules));
+	SMObject PMObj(_TEXT("PMObj"), sizeof(ProcessManagement));
 	PMObj.SMAccess();
-	SM_Modules* PMSMPtr = (SM_Modules*)PMObj.pData;
+	ProcessManagement* PMSMPtr = (ProcessManagement*)PMObj.pData;
 
 	// LMS151 port number must be 23000
 	int PortNumber = 23000;

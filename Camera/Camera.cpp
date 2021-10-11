@@ -71,6 +71,11 @@ void display()
 }
 void idle()
 {
+	SMObject PMObj(_TEXT("PMObj"), sizeof(ProcessManagement));
+	PMObj.SMAccess();
+	ProcessManagement* PMSMPtr = (ProcessManagement*)PMObj.pData;
+	if (PMSMPtr->Shutdown.Status)
+		exit(0);
 
 	//receive from zmq
 	zmq::message_t update;

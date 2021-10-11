@@ -43,7 +43,7 @@ int main()
 {
 
 	//tele-operation, declaration and initialisation
-	SMObject PMObj(_TEXT("PMObj"), sizeof(SM_Modules));
+	SMObject PMObj(_TEXT("PMObj"), sizeof(ProcessManagement));
 	array<UGVProcesses>^ ProcessList = gcnew array<UGVProcesses>
 	{
 		{"Laser", 1, 0, 10, gcnew Process},
@@ -58,14 +58,14 @@ int main()
 	PMObj.SMAccess(); //check SMAccessError flag for error trapping
 
 	// ptr to SM struct
-	SM_Modules* PMSMPtr = (SM_Modules*)PMObj.pData;
-	if (PMSMPtr->PMSM.Shutdown.Status)
+	ProcessManagement* PMSMPtr = (ProcessManagement*)PMObj.pData;
+	if (PMSMPtr->Shutdown.Status)
 		exit(0);
 
 	// set flags at start of program
-	PMSMPtr->PMSM.Shutdown.Flags.ProcessManagement = 0;
-	PMSMPtr->PMSM.Heartbeat.Status = 0x00; 
-	PMSMPtr->PMSM.Shutdown.Status = 0x00;
+	PMSMPtr->Shutdown.Flags.ProcessManagement = 0;
+	PMSMPtr->Heartbeat.Status = 0x00; 
+	PMSMPtr->Shutdown.Status = 0x00;
 	
 
 	//PM specific tasks here
@@ -76,46 +76,46 @@ int main()
 
 	while (!_kbhit()) { //while no keyboard hit
 		// detect laser heartbeat
-		if (PMSMPtr->PMSM.Heartbeat.Flags.Laser == 1) {
-			PMSMPtr->PMSM.Heartbeat.Flags.Laser = 0;
+		if (PMSMPtr->Heartbeat.Flags.Laser == 1) {
+			PMSMPtr->Heartbeat.Flags.Laser = 0;
 		}
 		else {
 			//wait time limit required
-			PMSMPtr->PMSM.Shutdown.Status = 0xFF; // shutdown; critical process
+			PMSMPtr->Shutdown.Status = 0xFF; // shutdown; critical process
 		}
 
 		// detect GPS heartbeat
-		if (PMSMPtr->PMSM.Heartbeat.Flags.GPS == 1) {
-			PMSMPtr->PMSM.Heartbeat.Flags.GPS = 0;
+		if (PMSMPtr->Heartbeat.Flags.GPS == 1) {
+			PMSMPtr->Heartbeat.Flags.GPS = 0;
 		}
 		else {
-			PMSMPtr->PMSM.Shutdown.Flags.Display = 1;
-			PMSMPtr->PMSM.Shutdown.Status = 0xFF;
+			PMSMPtr->Shutdown.Flags.Display = 1;
+			PMSMPtr->Shutdown.Status = 0xFF;
 			StartProcesses(); // restart non-critical process
 		}
 
 		// detect camera heartbeat
-		if (PMSMPtr->PMSM.Heartbeat.Flags.Camera == 1) {
-			PMSMPtr->PMSM.Heartbeat.Flags.Camera = 0;
+		if (PMSMPtr->Heartbeat.Flags.Camera == 1) {
+			PMSMPtr->Heartbeat.Flags.Camera = 0;
 		}
 		else {
-			PMSMPtr->PMSM.Shutdown.Status = 0xFF; // shutdown; critical process
+			PMSMPtr->Shutdown.Status = 0xFF; // shutdown; critical process
 		}
 
 		// detect vehicle heartbeat
-		if (PMSMPtr->PMSM.Heartbeat.Flags.VehicleControl == 1) {
-			PMSMPtr->PMSM.Heartbeat.Flags.VehicleControl = 0;
+		if (PMSMPtr->Heartbeat.Flags.VehicleControl == 1) {
+			PMSMPtr->Heartbeat.Flags.VehicleControl = 0;
 		}
 		else {
-			PMSMPtr->PMSM.Shutdown.Status = 0xFF; // shutdown; critical process
+			PMSMPtr->Shutdown.Status = 0xFF; // shutdown; critical process
 		}
 
 		// detect display heartbeat
-		if (PMSMPtr->PMSM.Heartbeat.Flags.Display == 1) {
-			PMSMPtr->PMSM.Heartbeat.Flags.Display = 0;
+		if (PMSMPtr->Heartbeat.Flags.Display == 1) {
+			PMSMPtr->Heartbeat.Flags.Display = 0;
 		}
 		else {
-			PMSMPtr->PMSM.Shutdown.Status = 0xFF; // shutdown; critical process
+			PMSMPtr->Shutdown.Status = 0xFF; // shutdown; critical process
 		}
 
 		// exit loop if PM shutdown
@@ -126,7 +126,7 @@ int main()
 	}
 
 	// shutdown PM after exiting while loop
-	PMSMPtr->PMSM.Shutdown.Status = 0xFF;
+	PMSMPtr->Shutdown.Status = 0xFF;
 
 	Console::WriteLine("Process management terminated normally.");
 	return 0;
