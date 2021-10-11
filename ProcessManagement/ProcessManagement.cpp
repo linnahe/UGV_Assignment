@@ -48,7 +48,7 @@ int main()
 	SM_Modules* PMSMPtr = (SM_Modules*)PMObj.pData;
 
 	// set flags at start of program
-	PMSMPtr->PMSM.Shutdown.Flags.ProcessManagement = false;
+	PMSMPtr->PMSM.Shutdown.Flags.ProcessManagement = 0;
 	PMSMPtr->PMSM.Heartbeat.Status = 0x00; 
 	PMSMPtr->PMSM.Shutdown.Status = 0x00;
 	
@@ -59,12 +59,13 @@ int main()
 	//start all 5 modules
 	StartProcesses();
 
-	while (_kbhit()) {
+	while (!_kbhit()) { //while no keyboard hit
 		// detect laser heartbeat
 		if (PMSMPtr->PMSM.Heartbeat.Flags.Laser == 1) {
 			PMSMPtr->PMSM.Heartbeat.Flags.Laser = 0;
 		}
 		else {
+			//wait time limit required
 			PMSMPtr->PMSM.Shutdown.Status = 0xFF; // shutdown; critical process
 		}
 

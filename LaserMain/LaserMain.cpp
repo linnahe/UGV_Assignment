@@ -19,12 +19,15 @@ int main()
 	// laser(PLATFORM_ADDRESS, LASER_PORT);
 
 	// instantiate shared memory object
-	SMObject PMObj(_TEXT("PMObj"), sizeof(ProcessManagement));
-	SMObject LaserObj(_TEXT("LaserObj"), sizeof(SM_Laser));
+	//SMObject PMObj(_TEXT("PMObj"), sizeof(ProcessManagement));
+	SMObject PMObj(_TEXT("PMObj"), sizeof(SM_Modules));
+	//SMObject LaserObj(_TEXT("LaserObj"), sizeof(SM_Laser));
 
 	// access shared memory
 	PMObj.SMAccess();
-	LaserObj.SMAccess();
+	//LaserObj.SMAccess();
+
+	SM_Modules* PMSMPtr = (SM_Modules*)PMObj.pData;
 
 	array<double>^ TSValues = gcnew array<double>(100);
 	int TSCounter = 0;
@@ -57,8 +60,11 @@ int main()
 					//false->keep going (dont need this line)
 		Console::WriteLine("Laser time stamp : {0,12:F3} {1,12:X2}", TimeStamp, Shutdown); //0 is the first parameter, 12 is the feed rate, then 3 is the decimal places
 		Thread::Sleep(25);
-		if (ProcessManagement->Shutdown.Status) //if shutdown is non-zero then it will break and quit
+		//if (ProcessManagement->Shutdown.Status) //if shutdown is non-zero then it will break and quit
+		//	break;
+		if (PMSMPtr->PMSM.Shutdown.Flags.Laser == 1) {
 			break;
+		}
 		if (_kbhit()) {
 			Console::ReadKey();
 			break;
@@ -71,3 +77,4 @@ int main()
 }
 
 //plot TSValues in Matlab
+
