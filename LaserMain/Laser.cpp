@@ -10,6 +10,8 @@
 #define LASER_PORT "23000"
 #define PLATFORM_ADDRESS "192.168.1.200"
 
+#define PI 3.1416
+
 using namespace System;
 using namespace System::Diagnostics;
 using namespace System::Threading;
@@ -106,8 +108,8 @@ int main()
 
 		for (int i = 0; i < NumRanges; i++) {
 			Range[i] = System::Convert::ToInt32(StringArray[26 + i], 16);
-			RangeX[i] = Range[i] * sin(i * Resolution);
-			RangeY[i] = Range[i] * cos(i * Resolution);
+			RangeX[i] = Range[i] * sin((180-(i * Resolution)*(PI/180));
+			RangeY[i] = Range[i] * cos((180-(i * Resolution)*(PI/180));
 			Console::WriteLine("X coordinate is " + RangeX[i]);
 			Console::WriteLine("Y coordinate is " + RangeY[i]);
 		}
