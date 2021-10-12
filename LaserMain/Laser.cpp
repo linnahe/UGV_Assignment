@@ -93,8 +93,12 @@ int main()
 		array<wchar_t>^ Space = { ' ' };
 		array<String^>^ StringArray = ResponseData->Split(Space);
 
-		double StartAngle = System::Convert::ToInt32(StringArray[23], 16);
+		double StartAngle = System::Convert::ToInt32(StringArray[23], 16) * PI/180; //rad to deg
 		double Resolution = System::Convert::ToInt32(StringArray[24], 16) / 10000.0;
+
+		Console::WriteLine("Start Angle     : {0,12:F3}", StartAngle); 
+		Console::WriteLine("Resolution      : {0,12:F3}", Resolution);
+
 		int NumRanges = System::Convert::ToInt32(StringArray[25], 16);
 
 		array<double>^ Range = gcnew array<double>(NumRanges);
