@@ -110,13 +110,11 @@ int main()
 			RangeY[i] = Range[i] * cos(i * Resolution);
 			Console::WriteLine("x: " + RangeX[i] + " y: " + RangeY[i]);
 			System::Threading::Thread::Sleep(100);
+			if (PMSMPtr->Shutdown.Status)
+				exit(0);
 		}
 
-		SMObject PMObj(_TEXT("PMObj"), sizeof(ProcessManagement));
-		PMObj.SMAccess();
-		ProcessManagement* PMSMPtr = (ProcessManagement*)PMObj.pData;
-		if (PMSMPtr->Shutdown.Status)
-			exit(0);
+
 		/*
 		if (_kbhit()) {
 			Console::ReadKey();
@@ -129,8 +127,8 @@ int main()
 	Stream->Close();
 	Client->Close();
 
-	Console::ReadKey();
-	Console::ReadKey();
+	//Console::ReadKey();
+	//Console::ReadKey();
 
 
 	return 0;

@@ -23,7 +23,7 @@ void StartProcesses();
 //defining start up sequence
 TCHAR Units[10][20] = //
 {
-	TEXT("Laser.exe"),
+	TEXT("Laser2.exe"),
 	TEXT("Display.exe"),
 	TEXT("Vehicle.exe"),
 	TEXT("GPS.exe"),
@@ -59,12 +59,12 @@ int main()
 
 	// ptr to SM struct
 	ProcessManagement* PMSMPtr = (ProcessManagement*)PMObj.pData;
-	if (PMSMPtr->Shutdown.Status)
-		exit(0);
+	//if (PMSMPtr->Shutdown.Status)
+	//	exit(0);
 
 	// set flags at start of program
-	PMSMPtr->Shutdown.Flags.ProcessManagement = 0;
-	PMSMPtr->Heartbeat.Status = 0x00; 
+	//PMSMPtr->Shutdown.Flags.ProcessManagement = 0;
+	//PMSMPtr->Heartbeat.Status = 0x00; 
 	PMSMPtr->Shutdown.Status = 0x00;
 	
 
