@@ -103,8 +103,8 @@ int main()
 
 		for (int i = 0; i < NumRanges; i++) {
 			Range[i] = System::Convert::ToInt32(StringArray[26 + i], 16);
-			RangeX[i] = Range[i] * sin((180-(i * Resolution)*(PI/180))); //convert from rad to deg
-			RangeY[i] = Range[i] * cos((180-(i * Resolution)*(PI/180))); //convert from rad to deg
+			RangeX[i] = Range[i] * sin((i * Resolution) * (PI / 180)); //convert from rad to deg
+			RangeY[i] = -Range[i] * cos((i * Resolution) * (PI / 180)); //convert from rad to deg
 			Console::WriteLine("x: " + RangeX[i] + " y: " + RangeY[i]);
 			System::Threading::Thread::Sleep(100);
 		}
