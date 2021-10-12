@@ -1,4 +1,3 @@
-//Compile in a C++ CLR empty project
 //connect to MTRN-WAP1
 #using <System.dll>
 #include <conio.h>//_kbhit()
@@ -7,8 +6,8 @@
 #include <smstructs.h>
 //#include "Laser.h"
 
-#define LASER_PORT "23000"
-#define PLATFORM_ADDRESS "192.168.1.200"
+#define LASER_PORT "23000" // LMS151 port number
+#define IP_ADDRESS "192.168.1.200"
 
 #define PI 3.1416
 
@@ -27,23 +26,19 @@ int main()
 	PMObj.SMAccess();
 	ProcessManagement* PMSMPtr = (ProcessManagement*)PMObj.pData;
 
-	// LMS151 port number must be 23000
-	int PortNumber = 23000;
 	// Pointer to TcpClent type object on managed heap
 	TcpClient^ Client; //handle to object
 	// arrays of unsigned chars to send and receive data
 	array<unsigned char>^ SendData; //unsigned char is a byte. SendData is a handle to the entire array
 	array<unsigned char>^ ReadData;
-	// String command to ask for Channel 1 analogue voltage from the PLC
-	// These command are available on Galil RIO47122 command reference manual
-	// available online
+
 	String^ AskScan = gcnew String("sRN LMDscandata"); //AskScan handle put on the heap
 	String^ StudID = gcnew String("5117757\n");
 	// String to store received data for display
 	String^ ResponseData;
 
 	// Creat TcpClient object and connect to it
-	Client = gcnew TcpClient("192.168.1.200", PortNumber); //create on heap
+	Client = gcnew TcpClient(IP_ADDRESS, LASER_PORT); //create on heap
 	// Configure connection
 	Client->NoDelay = true;
 	Client->ReceiveTimeout = 500;//ms. how long the client waits for a character to be received
@@ -71,7 +66,7 @@ int main()
 	ResponseData = System::Text::Encoding::ASCII->GetString(ReadData);
 	// Print the received string on the screen
 	Console::WriteLine(ResponseData);
-	Console::ReadKey();
+	//Console::ReadKey();
 
 	SendData = System::Text::Encoding::ASCII->GetBytes(AskScan);
 
@@ -108,8 +103,8 @@ int main()
 
 		for (int i = 0; i < NumRanges; i++) {
 			Range[i] = System::Convert::ToInt32(StringArray[26 + i], 16);
-			RangeX[i] = Range[i] * sin((180-(i * Resolution)*(PI/180)));
-			RangeY[i] = Range[i] * cos((180-(i * Resolution)*(PI/180)));
+			RangeX[i] = Range[i] * sin((180-(i * Resolution)*(PI/180))); //convert from rad to deg
+			RangeY[i] = Range[i] * cos((180-(i * Resolution)*(PI/180))); //convert from rad to deg
 			Console::WriteLine("x: " + RangeX[i] + " y: " + RangeY[i]);
 			System::Threading::Thread::Sleep(100);
 		}
@@ -124,8 +119,8 @@ int main()
 	Stream->Close();
 	Client->Close();
 
-	Console::ReadKey();
-	Console::ReadKey();
+	//Console::ReadKey();
+	//Console::ReadKey();
 
 
 	return 0;

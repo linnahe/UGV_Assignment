@@ -30,6 +30,7 @@ TCHAR Units[10][20] = //
 	TEXT("Camera.exe")
 };
 
+/*
 value struct UGVProcesses
 {
 	String^ ModuleName;
@@ -38,13 +39,14 @@ value struct UGVProcesses
 	int CrashCountLimit;
 	Process^ ProcessName;
 };
+*/
 
 int main()
 {
 
 	//tele-operation, declaration and initialisation
 	SMObject PMObj(_TEXT("PMObj"), sizeof(ProcessManagement));
-	array<UGVProcesses>^ ProcessList = gcnew array<UGVProcesses>
+	/*array<UGVProcesses>^ ProcessList = gcnew array<UGVProcesses>
 	{
 		{"Laser", 1, 0, 10, gcnew Process},
 		{ "Display", 1, 0, 10, gcnew Process },
@@ -52,6 +54,7 @@ int main()
 		{ "GPS", 0, 0, 10, gcnew Process },
 		{ "Camera", 0, 0, 10, gcnew Process }
 	};
+	*/
 
 	// create and access shared memory
 	PMObj.SMCreate(); // check SMCreateError flag for error trapping
@@ -59,15 +62,12 @@ int main()
 
 	// ptr to SM struct
 	ProcessManagement* PMSMPtr = (ProcessManagement*)PMObj.pData;
-	//if (PMSMPtr->Shutdown.Status)
-	//	exit(0);
 
 	// set flags at start of program
 	//PMSMPtr->Shutdown.Flags.ProcessManagement = 0;
 	//PMSMPtr->Heartbeat.Status = 0x00; 
 	PMSMPtr->Shutdown.Status = 0x00;
 	
-
 	//PM specific tasks here
 	// e.g. SMHBPtr->PMTimeStamp = (double)Stopwatch::GetTimestamp();
 
