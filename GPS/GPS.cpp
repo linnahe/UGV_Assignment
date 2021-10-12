@@ -1,4 +1,14 @@
 #include "GPS.h"
+#using <System.dll>
+#include <Windows.h>
+#include <tchar.h>
+#include <TlHelp32.h>
+#include <stdio.h>
+#include <iostream>
+#include <conio.h>
+
+#include <SMStructs.h>
+#include <SMObject.h>
 
 int GPS::connect(String^ hostName, int portNumber)
 {
@@ -77,7 +87,11 @@ int main()
 {
 	while (1)
 	{
-
+		SMObject PMObj(_TEXT("PMObj"), sizeof(ProcessManagement));
+		PMObj.SMAccess();
+		ProcessManagement* PMSMPtr = (ProcessManagement*)PMObj.pData;
+		if (PMSMPtr->Shutdown.Status)
+			exit(0);
 	}
 	return 0;
 }

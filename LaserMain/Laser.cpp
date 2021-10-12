@@ -5,7 +5,7 @@
 
 #include <SMObject.h>
 #include <smstructs.h>
-//#include "Laser.h"
+//#include "LaserHeader.h"
 
 #define LASER_PORT "23000"
 #define PLATFORM_ADDRESS "192.168.1.200"
@@ -69,7 +69,7 @@ int main()
 	ResponseData = System::Text::Encoding::ASCII->GetString(ReadData);
 	// Print the received string on the screen
 	Console::WriteLine(ResponseData);
-	Console::ReadKey();
+	//Console::ReadKey();
 
 	SendData = System::Text::Encoding::ASCII->GetBytes(AskScan);
 
@@ -108,14 +108,20 @@ int main()
 			Range[i] = System::Convert::ToInt32(StringArray[26 + i], 16);
 			RangeX[i] = Range[i] * sin(i * Resolution);
 			RangeY[i] = Range[i] * cos(i * Resolution);
-			Console::WriteLine("X coordinate is " + RangeX[i]);
-			Console::WriteLine("Y coordinate is " + RangeY[i]);
+			Console::WriteLine("x: " + RangeX[i] + " y: " + RangeY[i]);
 		}
 
+		SMObject PMObj(_TEXT("PMObj"), sizeof(ProcessManagement));
+		PMObj.SMAccess();
+		ProcessManagement* PMSMPtr = (ProcessManagement*)PMObj.pData;
+		if (PMSMPtr->Shutdown.Status)
+			exit(0);
+		/*
 		if (_kbhit()) {
 			Console::ReadKey();
 			break;
 		}
+		*/
 	}
 
 	//can put these in the laser class destructor

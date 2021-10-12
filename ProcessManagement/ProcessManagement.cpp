@@ -23,11 +23,11 @@ void StartProcesses();
 //defining start up sequence
 TCHAR Units[10][20] = //
 {
-	TEXT("GPS.exe"),
-	TEXT("Display.exe"),
-	TEXT("Camera.exe"),
 	TEXT("Laser.exe"),
-	TEXT("Vehicle.exe")
+	TEXT("Display.exe"),
+	TEXT("Vehicle.exe"),
+	TEXT("GPS.exe"),
+	TEXT("Camera.exe")
 };
 
 value struct UGVProcesses
@@ -76,6 +76,7 @@ int main()
 
 	while (!_kbhit()) { //while no keyboard hit
 		// detect laser heartbeat
+		/*
 		if (PMSMPtr->Heartbeat.Flags.Laser == 1) {
 			PMSMPtr->Heartbeat.Flags.Laser = 0;
 		}
@@ -122,6 +123,7 @@ int main()
 		//if (PMSMPtr->PMSM.Shutdown.Flags.ProcessManagement == 1) {
 		//	break;
 		//}
+		*/
 
 	}
 
