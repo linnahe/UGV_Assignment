@@ -109,6 +109,7 @@ int main()
 			RangeX[i] = Range[i] * sin(i * Resolution);
 			RangeY[i] = Range[i] * cos(i * Resolution);
 			Console::WriteLine("x: " + RangeX[i] + " y: " + RangeY[i]);
+			System::Threading::Thread::Sleep(100);
 		}
 
 		SMObject PMObj(_TEXT("PMObj"), sizeof(ProcessManagement));
