@@ -20,11 +20,7 @@ using namespace System::Net::Sockets;
 using namespace Text;
 
 /*
-int GPS::connect(String^ hostName, int portNumber)
-{
-	// YOUR CODE HERE
-	return 1;
-}
+
 int GPS::setupSharedMemory()
 {
 	// YOUR CODE HERE
@@ -57,6 +53,12 @@ int GPS::setHeartbeat(bool heartbeat)
 }
 
 */
+
+int GPS::connect(String^ hostName, int portNumber)
+{
+	// YOUR CODE HERE
+	return 1;
+}
 
 //close GPS
 GPS::~GPS()
@@ -122,57 +124,33 @@ int main()
 		ProcessManagement* PMSMPtr = (ProcessManagement*)PMObj.pData;
 		GPS* GPSSMPtr = (GPS*)GPSObj.pData;
 
-		// declare handle to TcpClient object
-		TcpClient^ Client;
+		// Pointer to TcpClent type object on managed heap
+		TcpClient^ Client; //handle to object
+		// arrays of unsigned chars to send and receive data
+		array<unsigned char>^ SendData; //unsigned char is a byte. SendData is a handle to the entire array
+		array<unsigned char>^ ReadData;
+
+		//String^ AskScan = gcnew String("sRN LMDscandata"); //AskScan handle put on the heap
+		//String^ StudID = gcnew String("5117757\n");
+		//String^ ResponseData;
+
+		// Creat TcpClient object and connect to it
 		Client = gcnew TcpClient(IP_ADDRESS, GPS_PORT);
 
-		// configure client
+		// Configure connection
 		Client->NoDelay = true;
-		Client->ReceiveTimeout = 500;
-		Client->SendTimeout = 500;
+		Client->ReceiveTimeout = 500;//ms. how long the client waits for a character to be received
+		Client->SendTimeout = 500;//ms. how long the client waits for a character to be transmitted
 		Client->ReceiveBufferSize = 1024;
 		Client->SendBufferSize = 1024;
 
-		// declarations
-		SerialPort^ Port = nullptr;
-		String^ PortName = nullptr;
-		array<unsigned char>^ SendData = nullptr;
-		array<unsigned char>^ RecvData = nullptr;
-		unsigned int Checksum;
-		double Northing;
-		double Easting;
-		double Height;
-
-		// instantiations
-		Port = gcnew SerialPort;
-		// PortName = gcnew String(“COM1”);
-		SendData = gcnew array<unsigned char>(16);
-		RecvData = gcnew array<unsigned char>();
-
-		// configurations
-		Port->PortName = PortName;
-		Port->BaudRate = 115200;
-		Port->StopBits = StopBits::One;
-		Port->DataBits = 8;
-		Port->Parity = Parity::None;
-		Port->Handshake = Handshake::None;
-
-		// Set the read/write timeouts & buffer size
-		Port->ReadTimeout = 500;
-		Port->WriteTimeout = 500;
-		//Port->ReadBufferSize = ;
-		Port->WriteBufferSize = 1024;
-
-		// actions
-		Port->Open();
-		Port->Read(RecvData, 0, sizeof(GPS));
-
-
 		// data storage
-		SendData = gcnew array<unsigned char>(1024);
-		Message = gcnew String("# ");
-		Message = Message + steer.ToString("F3") + " " + speed.ToString("F3") + " 1 #"; // flag can be 0 or 1
-		SendData = Encoding::ASCII->GetBytes(Message);
+		SendData = gcnew array<unsigned char>(1024); //1024 chars
+		ReadData = gcnew array<unsigned char>(2500); //read up to 2500 chars
+
+		//Message = gcnew String("# ");
+		//Message = Message + steer.ToString("F3") + " " + speed.ToString("F3") + " 1 #"; // flag can be 0 or 1
+		//SendData = Encoding::ASCII->GetBytes(Message);
 
 		// binary data in struct
 		GPS GPSData;
