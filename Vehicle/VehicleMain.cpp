@@ -10,7 +10,6 @@ using namespace System;
 using namespace System::Diagnostics;
 using namespace System::Threading;
 
-#include <UGV_module.h>
 
 #define VC_PORT 25000 // LMS151 port number
 #define IP_ADDRESS "192.168.1.200"
@@ -56,6 +55,15 @@ int Vehicle::connect(String^ hostName, int portNumber)
 	Client->ReceiveBufferSize = 1024;
 	Client->SendBufferSize = 1024;
 	Stream = Client->GetStream();
+
+	// Convert string command to an array of unsigned char
+	SendData = System::Text::Encoding::ASCII->GetBytes(StudID); //AskScan string is a readable ASCII, convert it into binary bytes, then put into SendData
+	// authenticate user
+	Stream->Write(SendData, 0, SendData->Length);
+	// Wait for the server to prepare the data, 1 ms would be sufficient, but used 10 ms
+	System::Threading::Thread::Sleep(10);
+
+	return 1;
 }
 
 int Vehicle::setupSharedMemory()
@@ -66,14 +74,24 @@ int Vehicle::setupSharedMemory()
 	VObj.SMAccess();
 	ProcessManagement* PMSMPtr = (ProcessManagement*)PMObj.pData;
 	SM_VehicleControl* VCSMPtr = (SM_VehicleControl*)VObj.pData;
+
+	return 1;
 }
 
 int Vehicle::getData()
 {
+	// retrieve data from display
+	SendData = gcnew array<unsigned char>(16);
+	Stream->Write(SendData, 0, SendData->Length);
+	// SendData = System::Text::Encoding::ASCII->GetBytes(ReadData);
+
+	int flag = 0; // toggles to 1
 	SendData = gcnew array<unsigned char>(1024); //initialisation
 	System::String^ Message = gcnew System::String("# ");
-	Message = Message + VCSMPtr->Steering.ToString("F3") + " " + VCSMPtr->Speed.ToString("F3") + " 1 #";
+	Message = Message + VCSMPtr->Steering.ToString("F3") + " " + VCSMPtr->Speed.ToString("F3") + flag + " #"; // sends data to weeder
 	SendData = Encoding::ASCII->GetBytes(Message);
+
+	return 1;
 }
 
 int Vehicle::checkData()
@@ -88,11 +106,13 @@ int Vehicle::sendDataToSharedMemory()
 
 bool Vehicle::getShutdownFlag()
 {
+	PMSMPtr->Shutdown.Flags.VehicleControl = 0;
 	return 1;
 }
 
 int Vehicle::setHeartbeat(bool heartbeat)
 {
+	PMSMPtr->Heartbeat.Flags.VehicleControl = 0;
 	return 1;
 }
 

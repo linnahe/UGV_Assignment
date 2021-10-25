@@ -3,9 +3,6 @@
 #include <UGV_module.h>
 #include <smstructs.h>
 
-#using <System.dll>
-using namespace System;
-using namespace System::Net::Sockets;
 
 ref class Vehicle : public UGV_module // class inherits from UGV_module
 {

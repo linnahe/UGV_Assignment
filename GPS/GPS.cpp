@@ -64,6 +64,8 @@ int GPS::connect(String^, int)
 	Client->SendBufferSize = 1024;
 	
 	Stream = Client->GetStream();
+
+	return 1;
 }
 
 int GPS::setupSharedMemory()
@@ -74,6 +76,8 @@ int GPS::setupSharedMemory()
 	GPSObj.SMAccess();
 	ProcessManagement* PMSMPtr = (ProcessManagement*)PMObj.pData;
 	SM_GPS* GPSSMPtr = (SM_GPS*)GPSObj.pData;
+
+	return 1;
 }
 
 int GPS::getData()
@@ -121,6 +125,8 @@ int GPS::getData()
 		GPSSMPtr->easting = NovatelGPS.Easting;
 		GPSSMPtr->height = NovatelGPS.Height;
 	}
+
+	return 1;
 }
 
 int GPS::checkData()
@@ -136,13 +142,14 @@ int GPS::sendDataToSharedMemory()
 
 bool GPS::getShutdownFlag()
 {
-	// YOUR CODE HERE
+	PMSMPtr->Shutdown.Flags.GPS = 0;
 	return 1;
 }
 
 int GPS::setHeartbeat(bool heartbeat)
 {
 	PMSMPtr->Heartbeat.Flags.GPS = 0;
+	return 1;
 }
 
 //close GPS
