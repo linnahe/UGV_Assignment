@@ -18,6 +18,10 @@ using namespace System::IO::Ports;
 using namespace System::Net::Sockets;
 using namespace Text;
 
+// global ptrs
+ProcessManagement* PMSMPtr;
+SM_GPS* GPSSMPtr;
+
 struct GPSData {
 	unsigned int Header; // 4 bytes
 	unsigned char Discard1[40]; // 40 bytes
@@ -32,81 +36,18 @@ struct GPSData {
 // these two CRC32 functions are code for calculating a checksum to verify that the GPS data has been received correctly by our code
 // don't need to modify these but need to call them
 
-unsigned long CRC32Value(int i)
-{
-	int j;
-	unsigned long ulCRC;
-	ulCRC = i;
-	for (j = 8; j > 0; j--)
-	{
-		if (ulCRC & 1)
-			ulCRC = (ulCRC >> 1) ^ CRC32_POLYNOMIAL;
-		else
-			ulCRC >>= 1;
-	}
-	return ulCRC;
-}
-
-unsigned long CalculateBlockCRC32(unsigned long ulCount, /* Number of bytes in the data block */
-	unsigned char* ucBuffer) /* Data block */
-{
-	unsigned long ulTemp1;
-	unsigned long ulTemp2;
-	unsigned long ulCRC = 0;
-	while (ulCount-- != 0)
-	{
-		ulTemp1 = (ulCRC >> 8) & 0x00FFFFFFL;
-		ulTemp2 = CRC32Value(((int)ulCRC ^ *ucBuffer++) & 0xff);
-		ulCRC = ulTemp1 ^ ulTemp2;
-	}
-	return(ulCRC);
-}
 
 int main()
 {
-	while (1)
-	{
-		GPS GPSMod;
-		// shared memory objects
-		GPSMod.setupSharedMemory();
+	GPS GPSMod;
 
-		// arrays of unsigned chars to send and receive data
-		array<unsigned char>^ SendData; //unsigned char is a byte. SendData is a handle to the entire array
-		array<unsigned char>^ RecvData;
+	// Creat TcpClient object and connect to it
+	GPSMod.connect(IP_ADDRESS, GPS_PORT);
+	// shared memory objects
+	GPSMod.setupSharedMemory();
+	// get GPS data 
+	GPSMod.getData();
 
-		// Creat TcpClient object and connect to it
-		GPSMod.connect(IP_ADDRESS, GPS_PORT);
-
-		// data storage
-		SendData = gcnew array<unsigned char>(1024); //1024 chars
-		RecvData = gcnew array<unsigned char>(5000);
-
-
-		// binary data in struct
-		GPSData NovatelGPS;
-		unsigned char* BytePtr;
-		BytePtr = (unsigned char*)(&NovatelGPS);
-		
-
-		// Stream->Read(RecvData, 0, RecvData->Length);
-
-		// header trapping
-		unsigned int Header = 0;
-		int i = 0;
-		int Start; //Start of data
-		do
-		{
-			Header = ((Header << 8) | RecvData[i++]);
-		} while (Header != 0xaa44121c);
-		Start = i - 4;
-
-		for (int i = Start; i < Start + sizeof(GPSData); i++)
-		{
-			*(BytePtr++) = RecvData[i];
-		}
-		Console::WriteLine("{ 0:F3 } ", NovatelGPS.Easting); // ok
-
-	}
 	return 0;
 }
 
@@ -137,13 +78,53 @@ int GPS::setupSharedMemory()
 
 int GPS::getData()
 {
-	// YOUR CODE HERE
-	return 1;
+	// arrays of unsigned chars to send and receive data
+	array<unsigned char>^ SendData; //unsigned char is a byte. SendData is a handle to the entire array
+	array<unsigned char>^ RecvData;
+
+
+	// data storage
+	SendData = gcnew array<unsigned char>(1024);
+	RecvData = gcnew array<unsigned char>(5000);
+
+	Stream->Read(RecvData, 0, RecvData->Length);
+
+	// header trapping
+	unsigned int Header = 0;
+	int i = 0;
+	int Start;
+	unsigned char Data;
+
+	do
+	{
+		Data = ReadData[i++];
+		Header = ((Header << 8) | Data);
+	} while (Header != 0xaa44121c);
+
+	// back to header (4 bytes)
+	Start = i - 4;
+
+	// binary data in struct
+	GPSData NovatelGPS;
+	unsigned char* BytePtr;
+	BytePtr = (unsigned char*)(&NovatelGPS);
+
+	for (int i = Start; i < Start + sizeof(GPSData); i++)
+	{
+		*(BytePtr++) = RecvData[i];
+	}
+	Console::WriteLine("{ 0:F3 } ", NovatelGPS.Easting); // ok
+
+	unsigned int CalculatedCRC = CalculateBlockCRC32(108, BytePtr);
+	if (CalculatedCRC == NovatelGPS.Checksum) {
+		GPSSMPtr->northing = NovatelGPS.Northing;
+		GPSSMPtr->easting = NovatelGPS.Easting;
+		GPSSMPtr->height = NovatelGPS.Height;
+	}
 }
 
 int GPS::checkData()
 {
-	// YOUR CODE HERE
 	return 1;
 }
 
@@ -161,8 +142,7 @@ bool GPS::getShutdownFlag()
 
 int GPS::setHeartbeat(bool heartbeat)
 {
-	//PMSMPtr->Heartbeat.Flags.GPS = 0;
-	return 1;
+	PMSMPtr->Heartbeat.Flags.GPS = 0;
 }
 
 //close GPS
@@ -170,4 +150,34 @@ GPS::~GPS()
 {
 	Stream->Close();
 	Client->Close();
+}
+
+unsigned long CRC32Value(int i)
+{
+	int j;
+	unsigned long ulCRC;
+	ulCRC = i;
+	for (j = 8; j > 0; j--)
+	{
+		if (ulCRC & 1)
+			ulCRC = (ulCRC >> 1) ^ CRC32_POLYNOMIAL;
+		else
+			ulCRC >>= 1;
+	}
+	return ulCRC;
+}
+
+unsigned long CalculateBlockCRC32(unsigned long ulCount, /* Number of bytes in the data block */
+	unsigned char* ucBuffer) /* Data block */
+{
+	unsigned long ulTemp1;
+	unsigned long ulTemp2;
+	unsigned long ulCRC = 0;
+	while (ulCount-- != 0)
+	{
+		ulTemp1 = (ulCRC >> 8) & 0x00FFFFFFL;
+		ulTemp2 = CRC32Value(((int)ulCRC ^ *ucBuffer++) & 0xff);
+		ulCRC = ulTemp1 ^ ulTemp2;
+	}
+	return(ulCRC);
 }
