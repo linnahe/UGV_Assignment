@@ -16,8 +16,7 @@
 
 using namespace System;
 using namespace System::IO::Ports;
-using namespace Net;
-using namespace Sockets;
+using namespace System::Net::Sockets;
 using namespace Text;
 
 /*
@@ -68,13 +67,13 @@ GPS::~GPS()
 
 
 struct GPS {
-	unsigned int header; // 4 bytes
-	unsigned char discard1[40]; // 40 bytes
-	double northing; // 8 bytes
-	double easting; // 8 bytes
-	double height; // 8 bytes
-	unsigned char discard2[40]; // 40 bytes
-	unsigned int checkSum; // 4 bytes
+	unsigned int Header; // 4 bytes
+	unsigned char Discard1[40]; // 40 bytes
+	double Northing; // 8 bytes
+	double Easting; // 8 bytes
+	double Height; // 8 bytes
+	unsigned char Discard2[40]; // 40 bytes
+	unsigned int Checksum; // 4 bytes
 	// total 112 bytes
 };
 
@@ -115,6 +114,14 @@ int main()
 {
 	while (1)
 	{
+		// shared memory objects
+		SMObject PMObj(_TEXT("PMObj"), sizeof(ProcessManagement));
+		SMObject GPSObj(_TEXT("GPSObj"), sizeof(GPS));
+		PMObj.SMAccess();
+		GPSObj.SMAccess();
+		ProcessManagement* PMSMPtr = (ProcessManagement*)PMObj.pData;
+		GPS* GPSSMPtr = (GPS*)GPSObj.pData;
+
 		// declare handle to TcpClient object
 		TcpClient^ Client;
 		Client = gcnew TcpClient(IP_ADDRESS, GPS_PORT);
@@ -188,18 +195,26 @@ int main()
 		while (NumData != sizeof(GPS))
 			NumData += Stream->Read(RecvData, NumData, sizeof(GPS) - NumData);
 
+		// header trapping
+		unsigned int Header = 0;
+		int i = 0;
+		int Start; //Start of data
+		do
+		{
+			Header = ((Header << 8) | RecvData[i++]);
+		} while (Header != 0xaa44121c);
+		Start = i - 4;
+
+		// loading binary data into struct
+		GPS NovatelGPS;
+		unsigned char* BytePtr = (unsigned char*)&NovatelGPS;
+		for (int i = Start; i < Start + sizeof(GPS); i++)
+		{
+			*(BytePtr++) = RecvData[i];
+		}
+		Console::WriteLine("{ 0:F3 } ", NovatelGPS.Easting); // ok
+
 		
-
-
-
-		// shared memory objects
-		SMObject PMObj(_TEXT("PMObj"), sizeof(ProcessManagement));
-		SMObject GPSObj(_TEXT("GPSObj"), sizeof(GPS));
-		PMObj.SMAccess();
-		GPSObj.SMAccess();
-		ProcessManagement* PMSMPtr = (ProcessManagement*)PMObj.pData;
-		GPS* GPSSMPtr = (GPS*)GPSObj.pData;
-
 		if (PMSMPtr->Shutdown.Status)
 			exit(0);
 	}
