@@ -9,15 +9,18 @@
 
 #include <SMStructs.h>
 #include <SMObject.h>
+#include "GPS.h"
 
 #define GPS_PORT 24000 // LMS151 port number
 #define IP_ADDRESS "192.168.1.200"
 
 using namespace System;
+using namespace System::IO::Ports;
 using namespace Net;
 using namespace Sockets;
 using namespace Text;
 
+/*
 int GPS::connect(String^ hostName, int portNumber)
 {
 	// YOUR CODE HERE
@@ -54,11 +57,15 @@ int GPS::setHeartbeat(bool heartbeat)
 	return 1;
 }
 
+*/
+
 //close GPS
 GPS::~GPS()
 {
-	// YOUR CODE HERE
+	Stream->Close();
+	Client->Close();
 }
+
 
 struct GPS {
 	unsigned int header; // 4 bytes
@@ -119,9 +126,44 @@ int main()
 		Client->ReceiveBufferSize = 1024;
 		Client->SendBufferSize = 1024;
 
+		// declarations
+		SerialPort^ Port = nullptr;
+		String^ PortName = nullptr;
+		array<unsigned char>^ SendData = nullptr;
+		array<unsigned char>^ RecvData = nullptr;
+		unsigned int Checksum;
+		double Northing;
+		double Easting;
+		double Height;
+
+		// instantiations
+		Port = gcnew SerialPort;
+		// PortName = gcnew String(“COM1”);
+		SendData = gcnew array<unsigned char>(16);
+		RecvData = gcnew array<unsigned char>();
+
+		// configurations
+		Port->PortName = PortName;
+		Port->BaudRate = 115200;
+		Port->StopBits = StopBits::One;
+		Port->DataBits = 8;
+		Port->Parity = Parity::None;
+		Port->Handshake = Handshake::None;
+
+		// Set the read/write timeouts & buffer size
+		Port->ReadTimeout = 500;
+		Port->WriteTimeout = 500;
+		//Port->ReadBufferSize = ;
+		Port->WriteBufferSize = 1024;
+
+		// actions
+		Port->Open();
+		Port->Read(RecvData, 0, sizeof(GPS));
+
+
 		// data storage
 		SendData = gcnew array<unsigned char>(1024);
-		Message = gcnew STring("# ");
+		Message = gcnew String("# ");
 		Message = Message + steer.ToString("F3") + " " + speed.ToString("F3") + " 1 #"; // flag can be 0 or 1
 		SendData = Encoding::ASCII->GetBytes(Message);
 
