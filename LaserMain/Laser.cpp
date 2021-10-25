@@ -6,7 +6,7 @@
 #include <smstructs.h>
 //#include "Laser.h"
 
-#define LASER_PORT "23000" // LMS151 port number
+#define LASER_PORT 23000 // LMS151 port number
 #define IP_ADDRESS "192.168.1.200"
 
 #define PI 3.1416

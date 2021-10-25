@@ -10,6 +10,14 @@
 #include <SMStructs.h>
 #include <SMObject.h>
 
+#define GPS_PORT 24000 // LMS151 port number
+#define IP_ADDRESS "192.168.1.200"
+
+using namespace System;
+using namespace Net;
+using namespace Sockets;
+using namespace Text;
+
 int GPS::connect(String^ hostName, int portNumber)
 {
 	// YOUR CODE HERE
@@ -45,10 +53,23 @@ int GPS::setHeartbeat(bool heartbeat)
 	// YOUR CODE HERE
 	return 1;
 }
+
+//close GPS
 GPS::~GPS()
 {
 	// YOUR CODE HERE
 }
+
+struct GPS {
+	unsigned int header; // 4 bytes
+	unsigned char discard1[40]; // 40 bytes
+	double northing; // 8 bytes
+	double easting; // 8 bytes
+	double height; // 8 bytes
+	unsigned char discard2[40]; // 40 bytes
+	unsigned int checkSum; // 4 bytes
+	// total 112 bytes
+};
 
 // these two CRC32 functions are code for calculating a checksum to verify that the GPS data has been received correctly by our code
 // don't need to modify these but need to call them
@@ -87,9 +108,56 @@ int main()
 {
 	while (1)
 	{
+		// declare handle to TcpClient object
+		TcpClient^ Client;
+		Client = gcnew TcpClient(IP_ADDRESS, GPS_PORT);
+
+		// configure client
+		Client->NoDelay = true;
+		Client->ReceiveTimeout = 500;
+		Client->SendTimeout = 500;
+		Client->ReceiveBufferSize = 1024;
+		Client->SendBufferSize = 1024;
+
+		// data storage
+		SendData = gcnew array<unsigned char>(1024);
+		Message = gcnew STring("# ");
+		Message = Message + steer.ToString("F3") + " " + speed.ToString("F3") + " 1 #"; // flag can be 0 or 1
+		SendData = Encoding::ASCII->GetBytes(Message);
+
+		// binary data in struct
+		GPS GPSData;
+		unsigned char* BytePtr;
+		BytePtr = (unsigned char*)(&GPSData);
+		for (int i = 0; i < sizeof(GPS); i++)
+			SendData[i] = *(BytePtr + i);
+
+		// TCP send to server
+		NetworkStream^ Stream = Client->GetStream();
+		Stream->Write(SendData, 0, SendData->Length);
+
+		// TCP receiver from server
+		array<unsigned char>^ RecvData;
+		RecvData = gcnew array<unsigned char>(5000);
+		NetworkStream^ Stream = Client->GetStream();
+		Stream->Read(RecvData, 0, RecvData->Length);
+
+		int NumData = 0;
+		while (NumData != sizeof(GPS))
+			NumData += Stream->Read(RecvData, NumData, sizeof(GPS) - NumData);
+
+		
+
+
+
+		// shared memory objects
 		SMObject PMObj(_TEXT("PMObj"), sizeof(ProcessManagement));
+		SMObject GPSObj(_TEXT("GPSObj"), sizeof(GPS));
 		PMObj.SMAccess();
+		GPSObj.SMAccess();
 		ProcessManagement* PMSMPtr = (ProcessManagement*)PMObj.pData;
+		GPS* GPSSMPtr = (GPS*)GPSObj.pData;
+
 		if (PMSMPtr->Shutdown.Status)
 			exit(0);
 	}
