@@ -9,7 +9,6 @@
 
 #include <SMStructs.h>
 #include <SMObject.h>
-#include "GPS.h"
 
 #define GPS_PORT 24000 // LMS151 port number
 #define IP_ADDRESS "192.168.1.200"
@@ -19,56 +18,7 @@ using namespace System::IO::Ports;
 using namespace System::Net::Sockets;
 using namespace Text;
 
-/*
-
-int GPS::setupSharedMemory()
-{
-	// YOUR CODE HERE
-	return 1;
-}
-int GPS::getData()
-{
-	// YOUR CODE HERE
-	return 1;
-}
-int GPS::checkData()
-{
-	// YOUR CODE HERE
-	return 1;
-}
-int GPS::sendDataToSharedMemory()
-{
-	// YOUR CODE HERE
-	return 1;
-}
-bool GPS::getShutdownFlag()
-{
-	// YOUR CODE HERE
-	return 1;
-}
-int GPS::setHeartbeat(bool heartbeat)
-{
-	// YOUR CODE HERE
-	return 1;
-}
-
-*/
-
-int GPS::connect(String^ hostName, int portNumber)
-{
-	// YOUR CODE HERE
-	return 1;
-}
-
-//close GPS
-GPS::~GPS()
-{
-	Stream->Close();
-	Client->Close();
-}
-
-
-struct GPS {
+struct GPSData {
 	unsigned int Header; // 4 bytes
 	unsigned char Discard1[40]; // 40 bytes
 	double Northing; // 8 bytes
@@ -116,62 +66,29 @@ int main()
 {
 	while (1)
 	{
+		GPS GPSMod;
 		// shared memory objects
-		SMObject PMObj(_TEXT("PMObj"), sizeof(ProcessManagement));
-		SMObject GPSObj(_TEXT("GPSObj"), sizeof(GPS));
-		PMObj.SMAccess();
-		GPSObj.SMAccess();
-		ProcessManagement* PMSMPtr = (ProcessManagement*)PMObj.pData;
-		GPS* GPSSMPtr = (GPS*)GPSObj.pData;
+		GPSMod.setupSharedMemory();
 
-		// Pointer to TcpClent type object on managed heap
-		TcpClient^ Client; //handle to object
 		// arrays of unsigned chars to send and receive data
 		array<unsigned char>^ SendData; //unsigned char is a byte. SendData is a handle to the entire array
-		array<unsigned char>^ ReadData;
-
-		//String^ AskScan = gcnew String("sRN LMDscandata"); //AskScan handle put on the heap
-		//String^ StudID = gcnew String("5117757\n");
-		//String^ ResponseData;
+		array<unsigned char>^ RecvData;
 
 		// Creat TcpClient object and connect to it
-		Client = gcnew TcpClient(IP_ADDRESS, GPS_PORT);
-
-		// Configure connection
-		Client->NoDelay = true;
-		Client->ReceiveTimeout = 500;//ms. how long the client waits for a character to be received
-		Client->SendTimeout = 500;//ms. how long the client waits for a character to be transmitted
-		Client->ReceiveBufferSize = 1024;
-		Client->SendBufferSize = 1024;
+		GPSMod.connect(IP_ADDRESS, GPS_PORT);
 
 		// data storage
 		SendData = gcnew array<unsigned char>(1024); //1024 chars
-		ReadData = gcnew array<unsigned char>(2500); //read up to 2500 chars
+		RecvData = gcnew array<unsigned char>(5000);
 
-		//Message = gcnew String("# ");
-		//Message = Message + steer.ToString("F3") + " " + speed.ToString("F3") + " 1 #"; // flag can be 0 or 1
-		//SendData = Encoding::ASCII->GetBytes(Message);
 
 		// binary data in struct
-		GPS GPSData;
+		GPSData NovatelGPS;
 		unsigned char* BytePtr;
-		BytePtr = (unsigned char*)(&GPSData);
-		for (int i = 0; i < sizeof(GPS); i++)
-			SendData[i] = *(BytePtr + i);
+		BytePtr = (unsigned char*)(&NovatelGPS);
+		
 
-		// TCP send to server
-		NetworkStream^ Stream = Client->GetStream();
-		Stream->Write(SendData, 0, SendData->Length);
-
-		// TCP receiver from server
-		array<unsigned char>^ RecvData;
-		RecvData = gcnew array<unsigned char>(5000);
-		NetworkStream^ Stream = Client->GetStream();
-		Stream->Read(RecvData, 0, RecvData->Length);
-
-		int NumData = 0;
-		while (NumData != sizeof(GPS))
-			NumData += Stream->Read(RecvData, NumData, sizeof(GPS) - NumData);
+		// Stream->Read(RecvData, 0, RecvData->Length);
 
 		// header trapping
 		unsigned int Header = 0;
@@ -183,18 +100,74 @@ int main()
 		} while (Header != 0xaa44121c);
 		Start = i - 4;
 
-		// loading binary data into struct
-		GPS NovatelGPS;
-		unsigned char* BytePtr = (unsigned char*)&NovatelGPS;
-		for (int i = Start; i < Start + sizeof(GPS); i++)
+		for (int i = Start; i < Start + sizeof(GPSData); i++)
 		{
 			*(BytePtr++) = RecvData[i];
 		}
 		Console::WriteLine("{ 0:F3 } ", NovatelGPS.Easting); // ok
 
-		
-		if (PMSMPtr->Shutdown.Status)
-			exit(0);
 	}
 	return 0;
+}
+
+int GPS::connect(String^, int)
+{
+	// create tcpclient object and connect
+	Client = gcnew TcpClient(IP_ADDRESS, GPS_PORT);
+
+	// configure connection
+	Client->NoDelay = true;
+	Client->ReceiveTimeout = 500;	//ms. how long the client waits for a character to be received
+	Client->SendTimeout = 500;		//ms. how long the client waits for a character to be transmitted
+	Client->ReceiveBufferSize = 1024;
+	Client->SendBufferSize = 1024;
+	
+	Stream = Client->GetStream();
+}
+
+int GPS::setupSharedMemory()
+{
+	SMObject PMObj(_TEXT("PMObj"), sizeof(ProcessManagement));
+	SMObject GPSObj(_TEXT("GPSObj"), sizeof(SM_GPS));
+	PMObj.SMAccess();
+	GPSObj.SMAccess();
+	ProcessManagement* PMSMPtr = (ProcessManagement*)PMObj.pData;
+	SM_GPS* GPSSMPtr = (SM_GPS*)GPSObj.pData;
+}
+
+int GPS::getData()
+{
+	// YOUR CODE HERE
+	return 1;
+}
+
+int GPS::checkData()
+{
+	// YOUR CODE HERE
+	return 1;
+}
+
+int GPS::sendDataToSharedMemory()
+{
+	// YOUR CODE HERE
+	return 1;
+}
+
+bool GPS::getShutdownFlag()
+{
+	// YOUR CODE HERE
+	return 1;
+}
+
+int GPS::setHeartbeat(bool heartbeat)
+{
+	//PMSMPtr->Heartbeat.Flags.GPS = 0;
+	return 1;
+}
+
+//close GPS
+GPS::~GPS()
+{
+	Stream->Close();
+	Client->Close();
 }

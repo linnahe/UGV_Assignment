@@ -25,12 +25,8 @@ public: //prefer to have function declarations in this file, then definitions in
 	int setHeartbeat(bool heartbeat) override;
 	~GPS();
 
-	unsigned long CRC32Value(int i);
-	unsigned long CalculateBlockCRC32(unsigned long ulCount, unsigned char* ucBuffer);
-
 
 protected:
 	// YOUR CODE HERE (ADDITIONAL MEMBER VARIABLES THAT YOU MAY WANT TO ADD)
-	TcpClient^ Client;
-	NetworkStream^ Stream;
+	array<unsigned char>^ SendData;		// Array to send sensor Data
 };
