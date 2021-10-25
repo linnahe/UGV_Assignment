@@ -9,11 +9,18 @@ using namespace System::Net::Sockets;
 
 ref class Vehicle : public UGV_module // class inherits from UGV_module
 {
-
-public:
+public: //prefer to have function declarations in this file, then definitions in a .cpp file
 	int connect(String^ hostName, int portNumber) override;
 	int setupSharedMemory() override;
-	void moveVehicle(double steer, double speed, int flag) override;
+	int getData() override;
+	int checkData() override;
+	int sendDataToSharedMemory() override;
+	bool getShutdownFlag() override;
+	int setHeartbeat(bool heartbeat) override;
 	~Vehicle();
+
+protected:
+	// YOUR CODE HERE (ADDITIONAL MEMBER VARIABLES THAT YOU MAY WANT TO ADD)
+	array<unsigned char>^ SendData;		// declaration
 
 };

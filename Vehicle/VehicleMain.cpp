@@ -39,6 +39,7 @@ int main()
 	//		break;
 	Vehicle VCMod;
 	VCMod.setupSharedMemory();
+	VCMod.connect(IP_ADDRESS, VC_PORT);
 
 }
 
@@ -67,10 +68,34 @@ int Vehicle::setupSharedMemory()
 	SM_VehicleControl* VCSMPtr = (SM_VehicleControl*)VObj.pData;
 }
 
-void Vehicle::moveVehicle(double steer, double speed, int flag)
+int Vehicle::getData()
+{
+	SendData = gcnew array<unsigned char>(1024); //initialisation
+	System::String^ Message = gcnew System::String("# ");
+	Message = Message + VCSMPtr->Steering.ToString("F3") + " " + VCSMPtr->Speed.ToString("F3") + " 1 #";
+	SendData = Encoding::ASCII->GetBytes(Message);
+}
+
+int Vehicle::checkData()
 {
 	return 1;
 }
+
+int Vehicle::sendDataToSharedMemory()
+{
+	return 1;
+}
+
+bool Vehicle::getShutdownFlag()
+{
+	return 1;
+}
+
+int Vehicle::setHeartbeat(bool heartbeat)
+{
+	return 1;
+}
+
 
 Vehicle::~Vehicle()
 {
