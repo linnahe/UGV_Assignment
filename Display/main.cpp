@@ -54,6 +54,9 @@ void mouse(int button, int state, int x, int y);
 void dragged(int x, int y);
 void motion(int x, int y);
 
+//void plotLaser();
+//void plotGPS();
+
 using namespace std;
 using namespace scos;
 
@@ -102,6 +105,16 @@ int main(int argc, char ** argv) {
 	//   custom vehicle.
 	// -------------------------------------------------------------------------
 	vehicle = new MyVehicle();
+
+	// shared memory
+	SMObject PMObj(_TEXT("PMObj"), sizeof(ProcessManagement));
+	PMObj.SMAccess();
+	ProcessManagement* PMSMPtr = (ProcessManagement*)PMObj.pData;
+
+	// module flags
+	PMSMPtr->Shutdown.Flags.Display = false;
+	PMSMPtr->Heartbeat.Flags.Display = true;
+	PMSMPtr->PMHeartbeat.Flags.Display = false;
 
 
 	glutMainLoop();
@@ -310,5 +323,3 @@ void motion(int x, int y) {
 	prev_mouse_x = x;
 	prev_mouse_y = y;
 };
-
-
