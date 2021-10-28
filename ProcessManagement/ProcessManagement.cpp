@@ -14,6 +14,7 @@ using namespace System::Diagnostics;
 using namespace System::Net::Sockets;
 using namespace System::Net;
 using namespace System::Text;
+using namespace System::Threading;
 
 #define NUM_UNITS 5 //number of modules set up
 
@@ -43,9 +44,20 @@ value struct UGVProcesses
 
 int main()
 {
+	//declaration
+	double TimeStamp; //divide by frequency(?)
+	__int64 Frequency, Counter;
+	int Shutdown = 0x00; //need in assignment
 
-	//tele-operation, declaration and initialisation
-	SMObject PMObj(_TEXT("PMObj"), sizeof(ProcessManagement));
+	QueryPerformanceFrequency((LARGE_INTEGER*)&Frequency);
+
+	//generate timestamp
+	QueryPerformanceCounter((LARGE_INTEGER*)&Counter);
+	TimeStamp = (double)Counter / (double)Frequency * 1000; //typecast. milliseconds
+	Console::WriteLine("Process Management time stamp : {0,12:F3} {1,12:X2}", TimeStamp, Shutdown); //0 is the first parameter, 12 is the feed rate, then 3 is the decimal places
+	Thread::Sleep(25);
+
+	
 	/*array<UGVProcesses>^ ProcessList = gcnew array<UGVProcesses>
 	{
 		{"Laser", 1, 0, 10, gcnew Process},
@@ -57,26 +69,34 @@ int main()
 	*/
 
 	// create and access shared memory
-	PMObj.SMCreate(); // check SMCreateError flag for error trapping
-	PMObj.SMAccess(); //check SMAccessError flag for error trapping
-
-	// ptr to SM struct
-	ProcessManagement* PMSMPtr = (ProcessManagement*)PMObj.pData;
+	SMObject PMObj(_TEXT("PMObj"), sizeof(ProcessManagement));
+	if (PMObj.SMCreate() == true) // check SMCreateError flag for error trapping
+	{
+		Console::WriteLine("Failed to create shared memory");
+	}
+	if (PMObj.SMAccess() == true) //check SMAccessError flag for error trapping
+	{
+		Console::WriteLine("Failed to access shared memory");
+	}
+	ProcessManagement* PMSMPtr = (ProcessManagement*)PMObj.pData; // ptr to SM struct
 
 	// set flags at start of program
 	//PMSMPtr->Shutdown.Flags.ProcessManagement = 0;
 	//PMSMPtr->Heartbeat.Status = 0x00; 
 	PMSMPtr->Shutdown.Status = 0x00;
+	PMSMPtr->Shutdown.Flags.ProcessManagement = false;
+	PMSMPtr->Heartbeat.Status = 0x00;						// set heartbeat for all modules
 	
-	//PM specific tasks here
-	// e.g. SMHBPtr->PMTimeStamp = (double)Stopwatch::GetTimestamp();
+	//time before starting processes
+	PMSMPtr->PMTimeStamp = (double)Stopwatch::GetTimestamp();
 
 	//start all 5 modules
 	StartProcesses();
 
-	while (!_kbhit()) { //while no keyboard hit
+	while (!PMSMPtr->Shutdown.Flags.ProcessManagement) { //while process management is active
+		PMSMPtr->PMHeartbeat.Status = 0xFF;
+
 		// detect laser heartbeat
-		/*
 		if (PMSMPtr->Heartbeat.Flags.Laser == 1) {
 			PMSMPtr->Heartbeat.Flags.Laser = 0;
 		}
@@ -123,7 +143,6 @@ int main()
 		//if (PMSMPtr->PMSM.Shutdown.Flags.ProcessManagement == 1) {
 		//	break;
 		//}
-		*/
 
 	}
 

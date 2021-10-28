@@ -61,17 +61,18 @@ struct ProcessManagement
 	ExecFlags Heartbeat; //Flags.Laser = 0; //1 or Status = 0x00 -> 0xFF. shutdown equals to 0xFF. can selectively shutdown processes. Status = 0x35
 	ExecFlags Shutdown;	//flag to shutdown modules
 	ExecFlags PMHeartbeat; //flag to check if PM shutdown
-	//double PMTimeStamp;
+	double PMTimeStamp;
 	long int LifeCounter;
 };
 
+/*
 struct SM_Modules
 {
 	ProcessManagement PMSM;
 	SM_GPS GPSSM;
 	SM_VehicleControl VehicleSM;
 	SM_Laser LaserSM;
-};
+}; */
 
 #define NONCRITICALMASK 0xff	//0 011 0000
 #define CRITICALMASK 0x0		//0 100 1111

@@ -20,22 +20,19 @@ SM_VehicleControl* VCSMPtr;
 
 int main()
 {
-	////declaration
-	//double TimeStamp; //divide by frequency(?)
-	//__int64 Frequency, Counter;
-	//int Shutdown = 0x00; //need in assignment
+	//declaration
+	double TimeStamp; //divide by frequency(?)
+	__int64 Frequency, Counter;
+	int Shutdown = 0x00; //need in assignment
 
-	//QueryPerformanceFrequency((LARGE_INTEGER*)&Frequency);
+	QueryPerformanceFrequency((LARGE_INTEGER*)&Frequency);
 
-	//	//generate timestamp
-	//	QueryPerformanceCounter((LARGE_INTEGER*)&Counter);
-	//	TimeStamp = (double)Counter / (double)Frequency * 1000; //typecast. milliseconds
-	//	Console::WriteLine("Vehicle time stamp : {0,12:F3} {1,12:X2}", TimeStamp, Shutdown); //0 is the first parameter, 12 is the feed rate, then 3 is the decimal places
-	//	Thread::Sleep(25);
-	//	//if (PMSMPtr->Shutdown.Status)
-	//	//	break;
-	//	if (_kbhit())
-	//		break;
+	//generate timestamp
+	QueryPerformanceCounter((LARGE_INTEGER*)&Counter);
+	TimeStamp = (double)Counter / (double)Frequency * 1000; //typecast. milliseconds
+	Console::WriteLine("Vehicle time stamp : {0,12:F3} {1,12:X2}", TimeStamp, Shutdown); //0 is the first parameter, 12 is the feed rate, then 3 is the decimal places
+	Thread::Sleep(25);
+
 	Vehicle VCMod;
 	VCMod.setupSharedMemory();
 	VCMod.connect(IP_ADDRESS, VC_PORT);
