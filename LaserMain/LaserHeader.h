@@ -8,7 +8,6 @@ ref class Laser : public UGV_module //Laser class inherits from UGV_module
 {
 
 public: //prefer to have function declarations in this file, then definitions in a .cpp file
-	/*
 	int connect(String^ hostName, int portNumber) override;
 	int setupSharedMemory() override;
 	int getData() override;
@@ -16,9 +15,6 @@ public: //prefer to have function declarations in this file, then definitions in
 	int sendDataToSharedMemory() override;
 	bool getShutdownFlag() override;
 	int setHeartbeat(bool heartbeat) override;
-	*/
-
-	Laser(String^ IPAddress, int PortAddress);
 	~Laser();
 	double StartAngle;	//StringArray[23]
 	double Resolution;	//StringArray[24]
@@ -27,7 +23,5 @@ public: //prefer to have function declarations in this file, then definitions in
 
 protected:
 	// YOUR CODE HERE (ADDITIONAL MEMBER VARIABLES THAT YOU MAY WANT TO ADD)
-	TcpClient^ Client;
-	NetworkStream^ Stream;
 	array<String^>^ SplitResponseData;
 };

@@ -147,7 +147,7 @@ int main()
 	}
 
 	// shutdown PM after exiting while loop
-	PMSMPtr->Shutdown.Status = 0xFF;
+	// PMSMPtr->Shutdown.Status = 0xFF;
 
 	Console::WriteLine("Process management terminated normally.");
 	Sleep(100);
