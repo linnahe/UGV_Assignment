@@ -55,7 +55,7 @@ int main()
 	QueryPerformanceCounter((LARGE_INTEGER*)&Counter);
 	TimeStamp = (double)Counter / (double)Frequency * 1000; //typecast. milliseconds
 	Console::WriteLine("Process Management time stamp : {0,12:F3} {1,12:X2}", TimeStamp, Shutdown); //0 is the first parameter, 12 is the feed rate, then 3 is the decimal places
-	Sleep(25);
+	Thread::Sleep(100);
 
 	
 	/*array<UGVProcesses>^ ProcessList = gcnew array<UGVProcesses>
@@ -96,12 +96,14 @@ int main()
 	while (!PMSMPtr->Shutdown.Flags.ProcessManagement) { //while process management is active
 		PMSMPtr->PMHeartbeat.Status = 0xFF;
 
+		Thread::Sleep(100);
+
 		// detect laser heartbeat
 		if (PMSMPtr->Heartbeat.Flags.Laser == 1) {
 			PMSMPtr->Heartbeat.Flags.Laser = 0;
 		}
 		else {
-			//wait time limit required
+			Thread::Sleep(100);
 			PMSMPtr->Shutdown.Status = 0xFF; // shutdown; critical process
 		}
 
@@ -111,7 +113,7 @@ int main()
 		}
 		else {
 			PMSMPtr->Shutdown.Flags.Display = 1;
-			PMSMPtr->Shutdown.Status = 0xFF;
+			// PMSMPtr->Shutdown.Status = 0xFF;
 			StartProcesses(); // restart non-critical process
 		}
 
@@ -120,6 +122,7 @@ int main()
 			PMSMPtr->Heartbeat.Flags.Camera = 0;
 		}
 		else {
+			PMSMPtr->Shutdown.Flags.Camera = 1;
 			PMSMPtr->Shutdown.Status = 0xFF; // shutdown; critical process
 		}
 
@@ -128,6 +131,7 @@ int main()
 			PMSMPtr->Heartbeat.Flags.VehicleControl = 0;
 		}
 		else {
+			PMSMPtr->Shutdown.Flags.VehicleControl = 1;
 			PMSMPtr->Shutdown.Status = 0xFF; // shutdown; critical process
 		}
 
@@ -136,13 +140,9 @@ int main()
 			PMSMPtr->Heartbeat.Flags.Display = 0;
 		}
 		else {
+			PMSMPtr->Shutdown.Flags.Display = 1;
 			PMSMPtr->Shutdown.Status = 0xFF; // shutdown; critical process
 		}
-
-		// exit loop if PM shutdown
-		//if (PMSMPtr->PMSM.Shutdown.Flags.ProcessManagement == 1) {
-		//	break;
-		//}
 
 	}
 
@@ -150,6 +150,7 @@ int main()
 	PMSMPtr->Shutdown.Status = 0xFF;
 
 	Console::WriteLine("Process management terminated normally.");
+	Sleep(100);
 	return 0;
 }
 
