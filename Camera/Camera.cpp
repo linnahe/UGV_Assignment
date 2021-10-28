@@ -23,9 +23,9 @@ zmq::socket_t subscriber(context, ZMQ_SUB);
 int main(int argc, char** argv)
 {
 	// shared memory
-	SMObject PMObj(_TEXT("PMObj"), sizeof(SM_Modules));
+	SMObject PMObj(_TEXT("PMObj"), sizeof(ProcessManagement));
 	PMObj.SMAccess();
-	SM_Modules* PMSMPtr = (SM_Modules*)PMObj.pData;
+	ProcessManagement* PMSMPtr = (ProcessManagement*)PMObj.pData;
 	//PMSMPtr->PMSM.Shutdown.Flags.Camera = 0; // set camera shutdown status
 
 	//Define window size

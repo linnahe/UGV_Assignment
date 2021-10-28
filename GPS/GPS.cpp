@@ -91,7 +91,7 @@ int GPS::getData()
 	SendData = gcnew array<unsigned char>(1024);
 	RecvData = gcnew array<unsigned char>(5000);
 
-	Stream->Read(RecvData, 0, RecvData->Length);
+	// Stream->Read(RecvData, 0, RecvData->Length);
 
 	// header trapping
 	unsigned int Header = 0;
