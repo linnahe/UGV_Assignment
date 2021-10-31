@@ -52,9 +52,6 @@ int main()
 	// generate timestamp
 	QueryPerformanceFrequency((LARGE_INTEGER*)&Frequency);
 	QueryPerformanceCounter((LARGE_INTEGER*)&Counter);
-	TimeStamp = (double)Counter / (double)Frequency * 1000; //typecast. milliseconds
-	Console::WriteLine("Process Management time stamp : {0,12:F3} {1,12:X2}", TimeStamp, Shutdown); //0 is the first parameter, 12 is the feed rate, then 3 is the decimal places
-	Thread::Sleep(100);
 
 	/*array<UGVProcesses>^ ProcessList = gcnew array<UGVProcesses>
 	{
@@ -97,9 +94,10 @@ int main()
 	SM_VehicleControl* VCSMPtr = (SM_VehicleControl*)VehicleObj.pData;
 
 
+	//start all 5 modules
+	StartProcesses();
+
 	// set flags at start of program
-	//PMSMPtr->Shutdown.Flags.ProcessManagement = 0;
-	//PMSMPtr->Heartbeat.Status = 0x00; 
 	PMSMPtr->Shutdown.Status = 0x00;
 	PMSMPtr->Shutdown.Flags.ProcessManagement = false;
 	PMSMPtr->Heartbeat.Status = 0x00;		// set heartbeat for all modules
@@ -113,11 +111,10 @@ int main()
 	//time before starting processes
 	PMSMPtr->PMTimeStamp = (double)Stopwatch::GetTimestamp();
 
-	//start all 5 modules
-	StartProcesses();
 
 	while (!_kbhit())
 	{
+		TimeStamp = (double)Counter / (double)Frequency * 1000; //typecast. milliseconds
 		Console::WriteLine("Process Management time stamp : {0,12:F3} {1,12:X2}", TimeStamp, Shutdown); //0 is the first parameter, 12 is the feed rate, then 3 is the decimal places
 		Thread::Sleep(100);
 
