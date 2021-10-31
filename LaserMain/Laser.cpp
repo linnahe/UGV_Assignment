@@ -1,4 +1,3 @@
-//connect to MTRN-WAP1
 #using <System.dll>
 #include <conio.h>//_kbhit()
 

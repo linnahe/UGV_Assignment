@@ -14,6 +14,8 @@
 #define IP_ADDRESS "192.168.1.200"
 
 using namespace System;
+using namespace System::Diagnostics;
+using namespace System::Threading;
 using namespace System::IO::Ports;
 using namespace System::Net::Sockets;
 using namespace Text;
@@ -21,6 +23,9 @@ using namespace Text;
 // global ptrs
 ProcessManagement* PMSMPtr;
 SM_GPS* GPSSMPtr;
+
+GPSData NovatelGPS;
+unsigned char* BytePtr;
 
 struct GPSData {
 	unsigned int Header; // 4 bytes
@@ -33,9 +38,6 @@ struct GPSData {
 	// total 112 bytes
 };
 
-// these two CRC32 functions are code for calculating a checksum to verify that the GPS data has been received correctly by our code
-// don't need to modify these but need to call them
-
 
 int main()
 {
@@ -45,8 +47,28 @@ int main()
 	GPSMod.connect(IP_ADDRESS, GPS_PORT);
 	// shared memory objects
 	GPSMod.setupSharedMemory();
-	// get GPS data 
-	GPSMod.getData();
+
+	while (!_kbhit())
+	{
+		GPSMod.setHeartbeat(PMSMPtr->Heartbeat.Flags.GPS);
+		// get GPS data 
+		while (!PMSMPtr->Shutdown.Flags.GPS)
+		{
+			GPSMod.getData();
+			if (GPSMod.checkData())
+			{
+				GPSMod.sendDataToSharedMemory();
+			}
+		}
+	
+		if (GPSMod.getShutdownFlag())
+		{
+			break;
+		}
+	}
+
+	//destructor
+	GPSMod.~GPS();
 
 	return 0;
 }
@@ -108,9 +130,6 @@ int GPS::getData()
 	// back to header (4 bytes)
 	Start = i - 4;
 
-	// binary data in struct
-	GPSData NovatelGPS;
-	unsigned char* BytePtr;
 	BytePtr = (unsigned char*)(&NovatelGPS);
 
 	for (int i = Start; i < Start + sizeof(GPSData); i++)
@@ -119,36 +138,73 @@ int GPS::getData()
 	}
 	Console::WriteLine("{ 0:F3 } ", NovatelGPS.Easting); // ok
 
+	
+}
+
+int GPS::checkData()
+{
 	unsigned int CalculatedCRC = CalculateBlockCRC32(108, BytePtr);
 	if (CalculatedCRC == NovatelGPS.Checksum) {
 		GPSSMPtr->northing = NovatelGPS.Northing;
 		GPSSMPtr->easting = NovatelGPS.Easting;
 		GPSSMPtr->height = NovatelGPS.Height;
+		return 1;
 	}
-
-	return 1;
-}
-
-int GPS::checkData()
-{
-	return 1;
+	else {
+		return 0;
+	}
 }
 
 int GPS::sendDataToSharedMemory()
 {
-	// YOUR CODE HERE
+	GPSSMPtr->northing = NovatelGPS.Northing;
+	GPSSMPtr->easting = NovatelGPS.Easting;
+	GPSSMPtr->height = NovatelGPS.Height;
+	Console::WriteLine("Northing : {0,12:F3}", NovatelGPS.Northing);
+	Console::WriteLine("Easting : {0,12:F3}", NovatelGPS.Easting);
+	Console::WriteLine("Height : {0,12:F3}", NovatelGPS.Height);
+	Console::WriteLine("***"); //new line
 	return 1;
 }
 
 bool GPS::getShutdownFlag()
 {
-	PMSMPtr->Shutdown.Flags.GPS = 0;
-	return 1;
+	bool flag = PMSMPtr->Shutdown.Flags.GPS;
+	return flag;
 }
 
 int GPS::setHeartbeat(bool heartbeat)
 {
-	PMSMPtr->Heartbeat.Flags.GPS = 0;
+	array<double>^ TSValues = gcnew array<double>(100);
+	int TSCounter = 0;
+	double TimeStamp; //divide by frequency(?)
+	__int64 Frequency, Counter;
+	__int64 OldCounter;
+	int Shutdown = 0x00; //need in assignment
+
+	//generate timestamp
+	QueryPerformanceFrequency((LARGE_INTEGER*)&Frequency);
+	QueryPerformanceCounter((LARGE_INTEGER*)&Counter);
+	TimeStamp = (double)(Counter) / (double)Frequency * 1000; //typecast. milliseconds
+	if (TSCounter < 100)
+		TSValues[TSCounter++] = TimeStamp;
+	//did PM put my flag down?
+	if (PMSMPtr->Heartbeat.Flags.GPS == 0)
+	{
+		// true->put my flag up
+		PMSMPtr->Heartbeat.Flags.GPS = 1;
+	}
+	else {
+		//False->if the PM time stamp older by agreed time period
+		if (TimeStamp - PMSMPtr->PMTimeStamp > 2000) // if PMData->PMTimeStamp is processed between PM publishes its first time stamp, the reading will be wrong here
+		{
+			//true->serious critical process failure
+			PMSMPtr->Shutdown.Status = 0xFF;
+			Console::WriteLine("Process Management Failed");
+		} //false->keep going (dont need this line)
+	}
+	Console::WriteLine("GPS time stamp : {0,12:F3} {1,12:X2}", TimeStamp, Shutdown); //0 is the first parameter, 12 is the feed rate, then 3 is the decimal places
+	Thread::Sleep(25);
 	return 1;
 }
 
@@ -158,6 +214,9 @@ GPS::~GPS()
 	Stream->Close();
 	Client->Close();
 }
+
+// these two CRC32 functions are code for calculating a checksum to verify that the GPS data has been received correctly by our code
+// don't need to modify these but need to call them
 
 unsigned long CRC32Value(int i)
 {
