@@ -49,15 +49,13 @@ int main()
 	__int64 Frequency, Counter;
 	int Shutdown = 0x00; //need in assignment
 
+	// generate timestamp
 	QueryPerformanceFrequency((LARGE_INTEGER*)&Frequency);
-
-	//generate timestamp
 	QueryPerformanceCounter((LARGE_INTEGER*)&Counter);
 	TimeStamp = (double)Counter / (double)Frequency * 1000; //typecast. milliseconds
 	Console::WriteLine("Process Management time stamp : {0,12:F3} {1,12:X2}", TimeStamp, Shutdown); //0 is the first parameter, 12 is the feed rate, then 3 is the decimal places
 	Thread::Sleep(100);
 
-	
 	/*array<UGVProcesses>^ ProcessList = gcnew array<UGVProcesses>
 	{
 		{"Laser", 1, 0, 10, gcnew Process},
@@ -80,13 +78,38 @@ int main()
 	}
 	ProcessManagement* PMSMPtr = (ProcessManagement*)PMObj.pData; // ptr to SM struct
 
+	// laser shared memory
+	SMObject LaserObj(_TEXT("LaserObj"), sizeof(SM_Laser));
+	LaserObj.SMCreate();
+	LaserObj.SMAccess();
+	SM_Laser* LSMPtr = (SM_Laser*)LaserObj.pData;
+
+	// gps shared memory
+	SMObject GPSObj(_TEXT("GPSObj"), sizeof(SM_GPS));
+	GPSObj.SMCreate();
+	GPSObj.SMAccess();
+	SM_GPS* GPSSMPtr = (SM_GPS*)GPSObj.pData;
+
+	// vehicle shared memory
+	SMObject VehicleObj(_TEXT("VehicleObj"), sizeof(SM_VehicleControl));
+	VehicleObj.SMCreate();
+	VehicleObj.SMAccess();
+	SM_VehicleControl* VCSMPtr = (SM_VehicleControl*)VehicleObj.pData;
+
+
 	// set flags at start of program
 	//PMSMPtr->Shutdown.Flags.ProcessManagement = 0;
 	//PMSMPtr->Heartbeat.Status = 0x00; 
 	PMSMPtr->Shutdown.Status = 0x00;
 	PMSMPtr->Shutdown.Flags.ProcessManagement = false;
-	PMSMPtr->Heartbeat.Status = 0x00;						// set heartbeat for all modules
+	PMSMPtr->Heartbeat.Status = 0x00;		// set heartbeat for all modules
 	
+	// while all modules are active, PM states it is active
+	while (!(PMSMPtr->Heartbeat.Flags.Laser && PMSMPtr->Heartbeat.Flags.GPS && PMSMPtr->Heartbeat.Flags.VehicleControl && PMSMPtr->Heartbeat.Flags.Display && PMSMPtr->Heartbeat.Flags.Camera))
+	{
+		PMSMPtr->PMHeartbeat.Status = 0xFF;
+	}
+
 	//time before starting processes
 	PMSMPtr->PMTimeStamp = (double)Stopwatch::GetTimestamp();
 
@@ -94,6 +117,7 @@ int main()
 	StartProcesses();
 
 	while (!PMSMPtr->Shutdown.Flags.ProcessManagement) { //while process management is active
+		// tell modules that pm is active
 		PMSMPtr->PMHeartbeat.Status = 0xFF;
 
 		Thread::Sleep(100);
@@ -142,6 +166,11 @@ int main()
 		else {
 			PMSMPtr->Shutdown.Flags.Display = 1;
 			PMSMPtr->Shutdown.Status = 0xFF; // shutdown; critical process
+		}
+		
+		if (!_kbhit())
+		{
+			break;
 		}
 
 	}

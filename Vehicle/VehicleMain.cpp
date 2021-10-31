@@ -24,7 +24,7 @@ int main()
 	VCMod.setupSharedMemory();
 	VCMod.connect(IP_ADDRESS, VC_PORT);
 
-	while (!_kbhit()) //put laser shutdown flag here to make it not shutdown
+	while (!_kbhit()) //put vehicle shutdown flag here to make it not shutdown
 	{
 		VCMod.setHeartbeat(PMSMPtr->Heartbeat.Flags.VehicleControl);
 

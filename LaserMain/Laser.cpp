@@ -16,8 +16,9 @@ using namespace System::Net::Sockets;
 using namespace System::Net;
 using namespace System::Text;
 
-ProcessManagement* PMSMPtr = NULL;
-SM_Laser* LSMPtr = NULL;
+// global ptrs
+ProcessManagement* PMSMPtr;
+SM_Laser* LSMPtr;
 
 int main()
 {
