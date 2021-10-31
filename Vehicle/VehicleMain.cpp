@@ -20,46 +20,67 @@ SM_VehicleControl* VCSMPtr;
 
 int main()
 {
-	//declaration
-	double TimeStamp; //divide by frequency(?)
-	__int64 Frequency, Counter;
-	int Shutdown = 0x00; //need in assignment
-
-	QueryPerformanceFrequency((LARGE_INTEGER*)&Frequency);
-
-	//generate timestamp
-	QueryPerformanceCounter((LARGE_INTEGER*)&Counter);
-	TimeStamp = (double)Counter / (double)Frequency * 1000; //typecast. milliseconds
-	Console::WriteLine("Vehicle time stamp : {0,12:F3} {1,12:X2}", TimeStamp, Shutdown); //0 is the first parameter, 12 is the feed rate, then 3 is the decimal places
-	Thread::Sleep(25);
-
 	Vehicle VCMod;
 	VCMod.setupSharedMemory();
 	VCMod.connect(IP_ADDRESS, VC_PORT);
+
+	while (!_kbhit()) //put laser shutdown flag here to make it not shutdown
+	{
+		VCMod.setHeartbeat(PMSMPtr->Heartbeat.Flags.VehicleControl);
+
+		if (VCMod.getShutdownFlag()) {
+			break;
+		}
+
+		while (!PMSMPtr->Shutdown.Flags.VehicleControl)
+		{
+			VCMod.getData();
+			VCMod.sendDataToSharedMemory();
+		}
+	}
+	VCMod.~Vehicle();
+
+	return 0;
 
 }
 
 int Vehicle::connect(String^ hostName, int portNumber)
 {
-	// create tcpclient object and connect
-	Client = gcnew TcpClient(IP_ADDRESS, VC_PORT);
+	String^ AskScan = gcnew String("sRN LMDscandata"); //AskScan handle put on the heap
 	String^ StudID = gcnew String("5117757\n");
+	// String to store received data for display
+	String^ ResponseData;
 
-	// configure connection
+	// Creat TcpClient object and connect to it
+	Client = gcnew TcpClient(IP_ADDRESS, VC_PORT); //create on heap
+	// Configure connection
 	Client->NoDelay = true;
-	Client->ReceiveTimeout = 500;	//ms. how long the client waits for a character to be received
-	Client->SendTimeout = 500;		//ms. how long the client waits for a character to be transmitted
+	Client->ReceiveTimeout = 500;//ms. how long the client waits for a character to be received
+	Client->SendTimeout = 500;//ms. how long the client waits for a character to be transmitted
 	Client->ReceiveBufferSize = 1024;
 	Client->SendBufferSize = 1024;
-	Stream = Client->GetStream();
 
+	// unsigned char arrays of 16 bytes each are created on managed heap. ASCII characters
+	SendData = gcnew array<unsigned char>(16); //16 chars
+	ReadData = gcnew array<unsigned char>(2500); //read up to 2500 chars
+
+	// Get the network stream object associated with client so we can use it to read and write
+	NetworkStream^ Stream = Client->GetStream(); //CLR object, Stream handle initialised, putting on heap
+
+	/*
 	// Convert string command to an array of unsigned char
 	SendData = System::Text::Encoding::ASCII->GetBytes(StudID); //AskScan string is a readable ASCII, convert it into binary bytes, then put into SendData
 	// authenticate user
 	Stream->Write(SendData, 0, SendData->Length);
 	// Wait for the server to prepare the data, 1 ms would be sufficient, but used 10 ms
 	System::Threading::Thread::Sleep(10);
-
+	// Read the incoming data
+	Stream->Read(ReadData, 0, ReadData->Length); //ReadData is binary here, need to convert to ASCII then print
+	ResponseData = System::Text::Encoding::ASCII->GetString(ReadData);
+	// Print the received string on the screen
+	Console::WriteLine(ResponseData);
+	//Console::ReadKey(); 
+	SendData = System::Text::Encoding::ASCII->GetBytes(AskScan); */
 	return 1;
 }
 
@@ -81,12 +102,7 @@ int Vehicle::getData()
 	SendData = gcnew array<unsigned char>(16);
 	Stream->Write(SendData, 0, SendData->Length);
 	// SendData = System::Text::Encoding::ASCII->GetBytes(ReadData);
-
-	int flag = 0; // toggles to 1
-	SendData = gcnew array<unsigned char>(1024); //initialisation
-	System::String^ Message = gcnew System::String("# ");
-	Message = Message + VCSMPtr->Steering.ToString("F3") + " " + VCSMPtr->Speed.ToString("F3") + flag + " #"; // sends data to weeder
-	SendData = Encoding::ASCII->GetBytes(Message);
+	Thread::Sleep(100);
 
 	return 1;
 }
@@ -98,18 +114,57 @@ int Vehicle::checkData()
 
 int Vehicle::sendDataToSharedMemory()
 {
+	int flag = 0; // toggles to 1
+	SendData = gcnew array<unsigned char>(1024); //initialisation
+	System::String^ Message = gcnew System::String("# ");
+	Message = Message + VCSMPtr->Steering.ToString("F3") + " " + VCSMPtr->Speed.ToString("F3") + flag + " #"; // sends data to weeder
+	SendData = Encoding::ASCII->GetBytes(Message);
+
+	//print vc data
+	Console::WriteLine(Message);
+	flag = !flag; //toggles
+
 	return 1;
 }
 
 bool Vehicle::getShutdownFlag()
 {
-	PMSMPtr->Shutdown.Flags.VehicleControl = 0;
-	return 1;
+	bool flag = PMSMPtr->Shutdown.Flags.VehicleControl;
+	return flag;
 }
 
 int Vehicle::setHeartbeat(bool heartbeat)
 {
-	PMSMPtr->Heartbeat.Flags.VehicleControl = 0;
+	array<double>^ TSValues = gcnew array<double>(100);
+	int TSCounter = 0;
+	double TimeStamp; //divide by frequency(?)
+	__int64 Frequency, Counter;
+	__int64 OldCounter;
+	int Shutdown = 0x00; //need in assignment
+
+	//generate timestamp
+	QueryPerformanceFrequency((LARGE_INTEGER*)&Frequency);
+	QueryPerformanceCounter((LARGE_INTEGER*)&Counter);
+	TimeStamp = (double)(Counter) / (double)Frequency * 1000; //typecast. milliseconds
+	if (TSCounter < 100)
+		TSValues[TSCounter++] = TimeStamp;
+	//did PM put my flag down?
+	if (PMSMPtr->Heartbeat.Flags.VehicleControl == 0)
+	{
+		// true->put my flag up
+		PMSMPtr->Heartbeat.Flags.VehicleControl = 1;
+	}
+	else {
+		//False->if the PM time stamp older by agreed time period
+		if (TimeStamp - PMSMPtr->PMTimeStamp > 2000) // if PMData->PMTimeStamp is processed between PM publishes its first time stamp, the reading will be wrong here
+		{
+			//true->serious critical process failure
+			PMSMPtr->Shutdown.Status = 0xFF;
+			Console::WriteLine("Process Management Failed");
+		} //false->keep going (dont need this line)
+	}
+	Console::WriteLine("Vehicle Control time stamp : {0,12:F3} {1,12:X2}", TimeStamp, Shutdown); //0 is the first parameter, 12 is the feed rate, then 3 is the decimal places
+	Thread::Sleep(25);
 	return 1;
 }
 
