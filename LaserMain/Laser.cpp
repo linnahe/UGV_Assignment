@@ -13,10 +13,12 @@
 using namespace System;
 using namespace System::Diagnostics;
 using namespace System::Threading;
-
 using namespace System::Net::Sockets;
 using namespace System::Net;
 using namespace System::Text;
+
+ProcessManagement* PMSMPtr = NULL;
+SM_Laser* LSMPtr = NULL;
 
 int main()
 {
@@ -27,46 +29,11 @@ int main()
 	LaserMod.getData();
 	
 	//Loop
-	while (!LSMPtr->Shutdown.Flags.Laser) //put laser shutdown flag here to make it not shutdown
+	while (!PMSMPtr->Shutdown.Flags.Laser) //put laser shutdown flag here to make it not shutdown
 	{
 		LaserMod.getData();
-		// Write command asking for data
-		Stream->WriteByte(0x02);
-		Stream->Write(SendData, 0, SendData->Length);
-		Stream->WriteByte(0x03);
-		// Wait for the server to prepare the data, 1 ms would be sufficient, but used 10 ms
-		System::Threading::Thread::Sleep(10);
-		// Read the incoming data
-		Stream->Read(ReadData, 0, ReadData->Length);
-		// Convert incoming data from an array of unsigned char bytes to an ASCII string
-		ResponseData = System::Text::Encoding::ASCII->GetString(ReadData);
-		// Print the received string on the screen
-		Console::WriteLine(ResponseData);
-
-		//lec5 slides
-		// makes array of references to strings, completes bi-directional ethernet comms.
-		array<wchar_t>^ Space = { ' ' };
-		array<String^>^ StringArray = ResponseData->Split(Space);
-
-		double StartAngle = System::Convert::ToInt32(StringArray[23], 16) * PI/180; //rad to deg
-		double Resolution = System::Convert::ToInt32(StringArray[24], 16) / 10000.0;
-
-		Console::WriteLine("Start Angle     : {0,12:F3}", StartAngle); 
-		Console::WriteLine("Resolution      : {0,12:F3}", Resolution);
-
-		int NumRanges = System::Convert::ToInt32(StringArray[25], 16);
-
-		array<double>^ Range = gcnew array<double>(NumRanges);
-		array<double>^ RangeX = gcnew array<double>(NumRanges);
-		array<double>^ RangeY = gcnew array<double>(NumRanges);
-
-		for (int i = 0; i < NumRanges; i++) {
-			Range[i] = System::Convert::ToInt32(StringArray[26 + i], 16);
-			RangeX[i] = Range[i] * sin((i * Resolution) * (PI / 180)); //convert from rad to deg
-			RangeY[i] = -Range[i] * cos((i * Resolution) * (PI / 180)); //convert from rad to deg
-			Console::WriteLine("x: " + RangeX[i] + " y: " + RangeY[i]);
-			System::Threading::Thread::Sleep(100);
-		}
+		LaserMod.checkData();
+		
 
 		if (_kbhit()) {
 			Console::ReadKey();
@@ -74,7 +41,7 @@ int main()
 		}
 	}
 
-	LaserMod.~Laser;
+	LaserMod.~Laser();
 
 
 	return 0;
@@ -84,10 +51,6 @@ int main()
 //use this to populate laser class
 int Laser::connect(String^ hostName, int portNumber)
 {
-	// arrays of unsigned chars to send and receive data
-	array<unsigned char>^ SendData; //unsigned char is a byte. SendData is a handle to the entire array
-	array<unsigned char>^ ReadData;
-
 	String^ AskScan = gcnew String("sRN LMDscandata"); //AskScan handle put on the heap
 	String^ StudID = gcnew String("5117757\n");
 	// String to store received data for display
@@ -131,6 +94,7 @@ int Laser::setupSharedMemory()
 	SMObject PMObj(_TEXT("PMObj"), sizeof(ProcessManagement));
 	SMObject LaserObj(_TEXT("LaserObj"), sizeof(SM_Laser));
 	PMObj.SMAccess();
+	LaserObj.SMCreate();
 	LaserObj.SMAccess();
 	ProcessManagement* PMSMPtr = (ProcessManagement*)PMObj.pData;
 	SM_Laser* LSMPtr = (SM_Laser*)LaserObj.pData;
@@ -157,21 +121,82 @@ int Laser::getData()
 
 int Laser::checkData()
 {
-	return 1;
+	// makes array of references to strings, completes bi-directional ethernet comms.
+	array<wchar_t>^ Space = { ' ' };
+	array<String^>^ StringArray = ResponseData->Split(Space);
+	ResponseData = ""; // refreshes string
+	if (StringArray[0] == "sRA" && StringArray[1] == "LMDscandata")
+	{
+		return 1;
+	}
+	else {
+		return 0;
+	}
 }
 
 int Laser::sendDataToSharedMemory()
 {
+	double StartAngle = System::Convert::ToInt32(StringArray[23], 16) * PI / 180; //rad to deg
+	double Resolution = System::Convert::ToInt32(StringArray[24], 16) / 10000.0;
+
+	Console::WriteLine("Start Angle     : {0,12:F3}", StartAngle);
+	Console::WriteLine("Resolution      : {0,12:F3}", Resolution);
+
+	int NumRanges = System::Convert::ToInt32(StringArray[25], 16);
+
+	array<double>^ Range = gcnew array<double>(NumRanges);
+	array<double>^ RangeX = gcnew array<double>(NumRanges);
+	array<double>^ RangeY = gcnew array<double>(NumRanges);
+
+	for (int i = 0; i < NumRanges; i++) {
+		Range[i] = System::Convert::ToInt32(StringArray[26 + i], 16);
+		RangeX[i] = Range[i] * sin((i * Resolution) * (PI / 180)); //convert from rad to deg
+		RangeY[i] = -Range[i] * cos((i * Resolution) * (PI / 180)); //convert from rad to deg
+		Console::WriteLine("polar: " + Range[i]);
+		Console::WriteLine("x: " + RangeX[i] + " y: " + RangeY[i]);
+		System::Threading::Thread::Sleep(100);
+	}
 	return 1;
 }
 
 bool Laser::getShutdownFlag()
 {
-	return 1;
+	bool flag = PMSMPtr->Shutdown.Flags.Laser;
+	return flag;
 }
 
 int Laser::setHeartbeat(bool heartbeat)
 {
+	array<double>^ TSValues = gcnew array<double>(100);
+	int TSCounter = 0;
+	double TimeStamp; //divide by frequency(?)
+	__int64 Frequency, Counter;
+	__int64 OldCounter;
+	int Shutdown = 0x00; //need in assignment
+
+	//generate timestamp
+	QueryPerformanceFrequency((LARGE_INTEGER*)&Frequency);
+	QueryPerformanceCounter((LARGE_INTEGER*)&Counter);
+	TimeStamp = (double)(Counter) / (double)Frequency * 1000; //typecast. milliseconds
+	if (TSCounter < 100)
+		TSValues[TSCounter++] = TimeStamp;
+	//did PM put my flag down?
+	if (PMSMPtr->Heartbeat.Flags.Laser == 0)
+	{
+		// true->put my flag up
+		PMSMPtr->Heartbeat.Flags.Laser = 1;
+	}
+	else {
+		//False->if the PM time stamp older by agreed time period
+		if (TimeStamp - PMSMPtr->PMTimeStamp > 2000) // if PMData->PMTimeStamp is processed between PM publishes its first time stamp, the reading will be wrong here
+		{
+			//true->serious critical process failure
+			PMSMPtr->Shutdown.Status = 0xFF;
+			Console::WriteLine("Process Management Failed");
+		} //false->keep going (dont need this line)
+	}	
+	Console::WriteLine("Laser time stamp : {0,12:F3} {1,12:X2}", TimeStamp, Shutdown); //0 is the first parameter, 12 is the feed rate, then 3 is the decimal places
+	Thread::Sleep(25);
 	return 1;
 }
 
@@ -179,9 +204,4 @@ Laser::~Laser()
 {
 	Stream->Close();
 	Client->Close();
-}
-
-void Laser::XYData()
-{
-	
 }

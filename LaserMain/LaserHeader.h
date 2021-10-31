@@ -16,12 +16,17 @@ public: //prefer to have function declarations in this file, then definitions in
 	bool getShutdownFlag() override;
 	int setHeartbeat(bool heartbeat) override;
 	~Laser();
-	double StartAngle;	//StringArray[23]
-	double Resolution;	//StringArray[24]
-	int NumRanges;		//StringArray[25]
-	void XYData();	
+
 
 protected:
 	// YOUR CODE HERE (ADDITIONAL MEMBER VARIABLES THAT YOU MAY WANT TO ADD)
 	array<String^>^ SplitResponseData;
+	array<String^>^ StringArray;
+	String^ ResponseData;
+	// arrays of unsigned chars to send and receive data
+	array<unsigned char>^ SendData; //unsigned char is a byte. SendData is a handle to the entire array
+	array<unsigned char>^ ReadData;
+	double StartAngle;	//StringArray[23]
+	double Resolution;	//StringArray[24]
+	int NumRanges;		//StringArray[25]
 };
