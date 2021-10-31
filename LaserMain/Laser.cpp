@@ -26,18 +26,21 @@ int main()
 
 	LaserMod.connect(IP_ADDRESS, LASER_PORT);
 	LaserMod.setupSharedMemory();
-	LaserMod.getData();
 	
 	//Loop
-	while (!PMSMPtr->Shutdown.Flags.Laser) //put laser shutdown flag here to make it not shutdown
+	while (!_kbhit()) //put laser shutdown flag here to make it not shutdown
 	{
-		LaserMod.getData();
-		LaserMod.checkData();
+		LaserMod.setHeartbeat(PMSMPtr->Heartbeat.Flags.Laser);
 		
-
-		if (_kbhit()) {
-			Console::ReadKey();
+		if (LaserMod.getShutdownFlag()) {
 			break;
+		}
+
+		while (!PMSMPtr->Shutdown.Flags.Laser)
+		{
+			LaserMod.getData();
+			LaserMod.checkData();
+			LaserMod.sendDataToSharedMemory();
 		}
 	}
 
