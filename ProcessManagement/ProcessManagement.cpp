@@ -116,61 +116,62 @@ int main()
 	//start all 5 modules
 	StartProcesses();
 
-	while (!PMSMPtr->Shutdown.Flags.ProcessManagement) { //while process management is active
-		// tell modules that pm is active
-		PMSMPtr->PMHeartbeat.Status = 0xFF;
-
+	while (!_kbhit())
+	{
+		Console::WriteLine("Process Management time stamp : {0,12:F3} {1,12:X2}", TimeStamp, Shutdown); //0 is the first parameter, 12 is the feed rate, then 3 is the decimal places
 		Thread::Sleep(100);
 
-		// detect laser heartbeat
-		if (PMSMPtr->Heartbeat.Flags.Laser == 1) {
-			PMSMPtr->Heartbeat.Flags.Laser = 0;
-		}
-		else {
+		while (!PMSMPtr->Shutdown.Flags.ProcessManagement) { //while process management is active
+		// tell modules that pm is active
+			PMSMPtr->PMHeartbeat.Status = 0xFF;
+
 			Thread::Sleep(100);
-			PMSMPtr->Shutdown.Status = 0xFF; // shutdown; critical process
-		}
 
-		// detect GPS heartbeat
-		if (PMSMPtr->Heartbeat.Flags.GPS == 1) {
-			PMSMPtr->Heartbeat.Flags.GPS = 0;
-		}
-		else {
-			PMSMPtr->Shutdown.Flags.Display = 1;
-			// PMSMPtr->Shutdown.Status = 0xFF;
-			StartProcesses(); // restart non-critical process
-		}
+			// detect laser heartbeat
+			if (PMSMPtr->Heartbeat.Flags.Laser == 1) {
+				PMSMPtr->Heartbeat.Flags.Laser = 0;
+			}
+			else {
+				Thread::Sleep(100);
+				PMSMPtr->Shutdown.Status = 0xFF; // shutdown; critical process
+			}
 
-		// detect camera heartbeat
-		if (PMSMPtr->Heartbeat.Flags.Camera == 1) {
-			PMSMPtr->Heartbeat.Flags.Camera = 0;
-		}
-		else {
-			PMSMPtr->Shutdown.Flags.Camera = 1;
-			PMSMPtr->Shutdown.Status = 0xFF; // shutdown; critical process
-		}
+			// detect GPS heartbeat
+			if (PMSMPtr->Heartbeat.Flags.GPS == 1) {
+				PMSMPtr->Heartbeat.Flags.GPS = 0;
+			}
+			else {
+				PMSMPtr->Shutdown.Flags.Display = 1;
+				// PMSMPtr->Shutdown.Status = 0xFF;
+				StartProcesses(); // restart non-critical process
+			}
 
-		// detect vehicle heartbeat
-		if (PMSMPtr->Heartbeat.Flags.VehicleControl == 1) {
-			PMSMPtr->Heartbeat.Flags.VehicleControl = 0;
-		}
-		else {
-			PMSMPtr->Shutdown.Flags.VehicleControl = 1;
-			PMSMPtr->Shutdown.Status = 0xFF; // shutdown; critical process
-		}
+			// detect camera heartbeat
+			if (PMSMPtr->Heartbeat.Flags.Camera == 1) {
+				PMSMPtr->Heartbeat.Flags.Camera = 0;
+			}
+			else {
+				PMSMPtr->Shutdown.Flags.Camera = 1;
+				PMSMPtr->Shutdown.Status = 0xFF; // shutdown; critical process
+			}
 
-		// detect display heartbeat
-		if (PMSMPtr->Heartbeat.Flags.Display == 1) {
-			PMSMPtr->Heartbeat.Flags.Display = 0;
-		}
-		else {
-			PMSMPtr->Shutdown.Flags.Display = 1;
-			PMSMPtr->Shutdown.Status = 0xFF; // shutdown; critical process
-		}
-		
-		if (!_kbhit())
-		{
-			break;
+			// detect vehicle heartbeat
+			if (PMSMPtr->Heartbeat.Flags.VehicleControl == 1) {
+				PMSMPtr->Heartbeat.Flags.VehicleControl = 0;
+			}
+			else {
+				PMSMPtr->Shutdown.Flags.VehicleControl = 1;
+				PMSMPtr->Shutdown.Status = 0xFF; // shutdown; critical process
+			}
+
+			// detect display heartbeat
+			if (PMSMPtr->Heartbeat.Flags.Display == 1) {
+				PMSMPtr->Heartbeat.Flags.Display = 0;
+			}
+			else {
+				PMSMPtr->Shutdown.Flags.Display = 1;
+				PMSMPtr->Shutdown.Status = 0xFF; // shutdown; critical process
+			}
 		}
 
 	}

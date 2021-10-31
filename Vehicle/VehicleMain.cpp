@@ -15,8 +15,8 @@ using namespace System::Threading;
 #define IP_ADDRESS "192.168.1.200"
 
 // global ptrs
-ProcessManagement* PMSMPtr;
-SM_VehicleControl* VCSMPtr;
+ProcessManagement* PMSMPtr = NULL;
+SM_VehicleControl* VCSMPtr = NULL;
 
 int main()
 {

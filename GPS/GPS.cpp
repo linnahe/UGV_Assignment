@@ -21,11 +21,8 @@ using namespace System::Net::Sockets;
 using namespace Text;
 
 // global ptrs
-ProcessManagement* PMSMPtr;
-SM_GPS* GPSSMPtr;
-
-GPSData NovatelGPS;
-unsigned char* BytePtr;
+ProcessManagement* PMSMPtr = NULL;
+SM_GPS* GPSSMPtr = NULL;
 
 struct GPSData {
 	unsigned int Header; // 4 bytes
@@ -38,6 +35,8 @@ struct GPSData {
 	// total 112 bytes
 };
 
+GPSData NovatelGPS;
+unsigned char* BytePtr;
 
 int main()
 {
@@ -138,7 +137,7 @@ int GPS::getData()
 	}
 	Console::WriteLine("{ 0:F3 } ", NovatelGPS.Easting); // ok
 
-	
+	return 1;
 }
 
 int GPS::checkData()
