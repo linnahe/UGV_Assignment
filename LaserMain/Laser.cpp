@@ -40,6 +40,7 @@ int main()
 		{
 			LaserMod.getData();
 			LaserMod.checkData();
+			Thread::Sleep(100);
 			LaserMod.sendDataToSharedMemory();
 		}
 	}
@@ -73,7 +74,7 @@ int Laser::connect(String^ hostName, int portNumber)
 	ReadData = gcnew array<unsigned char>(2500); //read up to 2500 chars
 
 	// Get the network stream object associated with client so we can use it to read and write
-	NetworkStream^ Stream = Client->GetStream(); //CLR object, Stream handle initialised, putting on heap
+	Stream = Client->GetStream(); //CLR object, Stream handle initialised, putting on heap
 
 	// Convert string command to an array of unsigned char
 	SendData = System::Text::Encoding::ASCII->GetBytes(StudID); //AskScan string is a readable ASCII, convert it into binary bytes, then put into SendData
@@ -85,7 +86,7 @@ int Laser::connect(String^ hostName, int portNumber)
 	Stream->Read(ReadData, 0, ReadData->Length); //ReadData is binary here, need to convert to ASCII then print
 	ResponseData = System::Text::Encoding::ASCII->GetString(ReadData);
 	// Print the received string on the screen
-	Console::WriteLine(ResponseData);
+	// Console::WriteLine(ResponseData);
 	//Console::ReadKey();
 
 	SendData = System::Text::Encoding::ASCII->GetBytes(AskScan);
@@ -119,7 +120,7 @@ int Laser::getData()
 	// Convert incoming data from an array of unsigned char bytes to an ASCII string
 	ResponseData = System::Text::Encoding::ASCII->GetString(ReadData);
 	// Print the received string on the screen
-	Console::WriteLine(ResponseData);
+	// Console::WriteLine(ResponseData);
 	return 1;
 }
 
@@ -127,7 +128,7 @@ int Laser::checkData()
 {
 	// makes array of references to strings, completes bi-directional ethernet comms.
 	array<wchar_t>^ Space = { ' ' };
-	array<String^>^ StringArray = ResponseData->Split(Space);
+	StringArray = ResponseData->Split(Space);
 	ResponseData = ""; // refreshes string
 	if (StringArray[0] == "sRA" && StringArray[1] == "LMDscandata")
 	{
@@ -140,13 +141,13 @@ int Laser::checkData()
 
 int Laser::sendDataToSharedMemory()
 {
-	double StartAngle = System::Convert::ToInt32(StringArray[23], 16) * PI / 180; //rad to deg
-	double Resolution = System::Convert::ToInt32(StringArray[24], 16) / 10000.0;
+	StartAngle = System::Convert::ToInt32(StringArray[23], 16) * PI / 180; //rad to deg
+	Resolution = System::Convert::ToInt32(StringArray[24], 16) / 10000.0;
 
 	Console::WriteLine("Start Angle     : {0,12:F3}", StartAngle);
 	Console::WriteLine("Resolution      : {0,12:F3}", Resolution);
 
-	int NumRanges = System::Convert::ToInt32(StringArray[25], 16);
+	NumRanges = System::Convert::ToInt32(StringArray[25], 16);
 
 	array<double>^ Range = gcnew array<double>(NumRanges);
 	array<double>^ RangeX = gcnew array<double>(NumRanges);
