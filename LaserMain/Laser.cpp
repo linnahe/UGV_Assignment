@@ -45,7 +45,7 @@ int main()
 	}
 
 	LaserMod.~Laser();
-
+	Console::ReadKey();
 
 	return 0;
 }

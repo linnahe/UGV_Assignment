@@ -5,6 +5,7 @@
 #include <SMObject.h>
 #include <smstructs.h>
 #include "Vehicle.h"
+#include <UGV_module.h>
 
 using namespace System;
 using namespace System::Diagnostics;
@@ -24,7 +25,7 @@ int main()
 	VCMod.setupSharedMemory();
 	VCMod.connect(IP_ADDRESS, VC_PORT);
 
-	while (!_kbhit()) //put vehicle shutdown flag here to make it not shutdown
+	while (1) //put vehicle shutdown flag here to make it not shutdown
 	{
 		VCMod.setHeartbeat(PMSMPtr->Heartbeat.Flags.VehicleControl);
 
@@ -39,7 +40,7 @@ int main()
 		}
 	}
 	VCMod.~Vehicle();
-
+	Console::ReadKey();
 	return 0;
 
 }
@@ -87,7 +88,7 @@ int Vehicle::connect(String^ hostName, int portNumber)
 int Vehicle::setupSharedMemory()
 {
 	ProcessManagementData = new SMObject(_TEXT("PMObj"), sizeof(ProcessManagement));
-	SensorData = new SMObject(_TEXT("LaserObj"), sizeof(SM_Laser));
+	SensorData = new SMObject(_TEXT("LaserObj"), sizeof(SM_VehicleControl));
 	ProcessManagementData->SMAccess();
 	SensorData->SMAccess();
 	PMSMPtr = (ProcessManagement*)ProcessManagementData->pData;

@@ -68,7 +68,7 @@ int main()
 
 	//destructor
 	GPSMod.~GPS();
-
+	Console::ReadKey();
 	return 0;
 }
 
@@ -92,8 +92,10 @@ int GPS::connect(String^, int)
 int GPS::setupSharedMemory()
 {
 	ProcessManagementData = new SMObject(_TEXT("PMObj"), sizeof(ProcessManagement));
-	SensorData = new SMObject(_TEXT("LaserObj"), sizeof(SM_Laser));
+	SensorData = new SMObject(_TEXT("LaserObj"), sizeof(SM_GPS));
+	ProcessManagementData->SMCreate();
 	ProcessManagementData->SMAccess();
+	SensorData->SMCreate();
 	SensorData->SMAccess();
 	PMSMPtr = (ProcessManagement*)ProcessManagementData->pData;
 	GPSSMPtr = (SM_GPS*)SensorData->pData;
@@ -121,33 +123,42 @@ int GPS::getData()
 	int Start;
 	unsigned char Data;
 
-	do
+	if (Stream->DataAvailable)
 	{
-		Data = ReadData[i++];
-		Header = ((Header << 8) | Data);
-	} while (Header != 0xaa44121c);
+		Stream->Read(RecvData, 0, RecvData->Length);
+		do
+		{
+			Data = RecvData[i++];
+			Header = ((Header << 8) | Data);
+		} while (Header != 0xaa44121c);
 
-	// back to header (4 bytes)
-	Start = i - 4;
+		// back to header (4 bytes)
+		Start = i - 4;
 
-	BytePtr = (unsigned char*)(&NovatelGPS);
+		BytePtr = (unsigned char*)(&NovatelGPS);
 
-	for (int i = Start; i < Start + sizeof(GPSData); i++)
-	{
-		*(BytePtr++) = RecvData[i];
+		for (int i = Start; i < Start + sizeof(GPSData); i++)
+		{
+			*(BytePtr++) = RecvData[i];
+		}
 	}
-	Console::WriteLine("{ 0:F3 } ", NovatelGPS.Easting); // ok
+	else {
+		return 0;
+	}
+	
+	//Console::WriteLine("{ 0:F3 } ", NovatelGPS.Easting); // ok
 
-	return 1;
+	// return 1;
 }
 
 int GPS::checkData()
 {
+	BytePtr = (unsigned char*)&NovatelGPS;
 	unsigned int CalculatedCRC = CalculateBlockCRC32(108, BytePtr);
 	if (CalculatedCRC == NovatelGPS.Checksum) {
-		GPSSMPtr->northing = NovatelGPS.Northing;
-		GPSSMPtr->easting = NovatelGPS.Easting;
-		GPSSMPtr->height = NovatelGPS.Height;
+		//GPSSMPtr->northing = NovatelGPS.Northing;
+		//GPSSMPtr->easting = NovatelGPS.Easting;
+		//GPSSMPtr->height = NovatelGPS.Height;
 		return 1;
 	}
 	else {
