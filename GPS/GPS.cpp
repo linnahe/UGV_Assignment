@@ -13,7 +13,7 @@
 #define GPS_PORT 24000 // LMS151 port number
 #define IP_ADDRESS "192.168.1.200"
 
-int i = 0;
+//int i = 0;
 
 using namespace System;
 using namespace System::Diagnostics;
@@ -26,6 +26,10 @@ using namespace Text;
 ProcessManagement* PMSMPtr = NULL;
 SM_GPS* GPSSMPtr = NULL;
 
+unsigned long CRC32Value(int i);
+unsigned long CalculateBlockCRC32(unsigned long ulCount, unsigned char* ucBuffer);
+
+#pragma pack(4)
 struct GPSData {
 	unsigned int Header; // 4 bytes
 	unsigned char Discard1[40]; // 40 bytes
@@ -51,7 +55,6 @@ int main()
 
 	// initialise flags
 	PMSMPtr->Shutdown.Flags.GPS = false;
-	PMSMPtr->Heartbeat.Flags.GPS = true;
 	PMSMPtr->PMHeartbeat.Flags.GPS = false;
 
 	while (1)
@@ -64,6 +67,7 @@ int main()
 			GPSMod.getData();
 			if (GPSMod.checkData())
 			{
+				Thread::Sleep(100);
 				GPSMod.sendDataToSharedMemory();
 			}
 		}
@@ -163,14 +167,15 @@ int GPS::checkData()
 {
 	BytePtr = (unsigned char*)&NovatelGPS;
 	unsigned long CalculatedCRC = CalculateBlockCRC32(108, BytePtr);
-	if (NovatelGPS.Checksum == CalculatedCRC) {
+	unsigned int check = NovatelGPS.Checksum;
+	if (check == CalculatedCRC) {
 		//GPSSMPtr->northing = NovatelGPS.Northing;
 		//GPSSMPtr->easting = NovatelGPS.Easting;
 		//GPSSMPtr->height = NovatelGPS.Height;
-		Console::WriteLine("CHECKSUM LOOP " + i);
-		Console::WriteLine("checksum is " + NovatelGPS.Checksum);
-		Console::WriteLine("Calculated CRC is " + CalculatedCRC);
-		i = i + 1;
+		//Console::WriteLine("CHECKSUM LOOP " + i);
+		//Console::WriteLine("checksum is " + NovatelGPS.Checksum);
+		//Console::WriteLine("Calculated CRC is " + CalculatedCRC);
+		//i = i + 1;
 		return 1;
 	}
 	else {
