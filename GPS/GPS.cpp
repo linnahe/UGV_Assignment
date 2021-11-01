@@ -13,6 +13,8 @@
 #define GPS_PORT 24000 // LMS151 port number
 #define IP_ADDRESS "192.168.1.200"
 
+int i = 0;
+
 using namespace System;
 using namespace System::Diagnostics;
 using namespace System::Threading;
@@ -159,6 +161,8 @@ int GPS::checkData()
 		//GPSSMPtr->northing = NovatelGPS.Northing;
 		//GPSSMPtr->easting = NovatelGPS.Easting;
 		//GPSSMPtr->height = NovatelGPS.Height;
+		Console::WriteLine("CHECKSUM LOOP" + i);
+		i = i + 1;
 		return 1;
 	}
 	else {

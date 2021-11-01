@@ -89,7 +89,9 @@ int Vehicle::setupSharedMemory()
 {
 	ProcessManagementData = new SMObject(_TEXT("PMObj"), sizeof(ProcessManagement));
 	SensorData = new SMObject(_TEXT("LaserObj"), sizeof(SM_VehicleControl));
+	ProcessManagementData->SMCreate();
 	ProcessManagementData->SMAccess();
+	SensorData->SMCreate();
 	SensorData->SMAccess();
 	PMSMPtr = (ProcessManagement*)ProcessManagementData->pData;
 	VCSMPtr = (SM_VehicleControl*)SensorData->pData;

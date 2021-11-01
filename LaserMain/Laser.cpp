@@ -96,8 +96,9 @@ int Laser::setupSharedMemory()
 {
 	ProcessManagementData = new SMObject(_TEXT("PMObj"), sizeof(ProcessManagement));
 	SensorData = new SMObject(_TEXT("LaserObj"), sizeof(SM_Laser));
+	ProcessManagementData->SMCreate();
 	ProcessManagementData->SMAccess();
-	// LaserObj.SMCreate();
+	SensorData->SMCreate();
 	SensorData->SMAccess();
 	PMSMPtr = (ProcessManagement*)ProcessManagementData->pData;
 	LSMPtr = (SM_Laser*)SensorData->pData;
