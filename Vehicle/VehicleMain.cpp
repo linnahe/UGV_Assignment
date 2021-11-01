@@ -18,6 +18,7 @@ using namespace System::Threading;
 // global ptrs
 ProcessManagement* PMSMPtr = NULL;
 SM_VehicleControl* VCSMPtr = NULL;
+int flag = 0; // toggles to 1 for senddatatosharedmemory()
 
 int main()
 {
@@ -66,7 +67,7 @@ int Vehicle::connect(String^ hostName, int portNumber)
 	ReadData = gcnew array<unsigned char>(2500); //read up to 2500 chars
 
 	// Get the network stream object associated with client so we can use it to read and write
-	NetworkStream^ Stream = Client->GetStream(); //CLR object, Stream handle initialised, putting on heap
+	Stream = Client->GetStream(); //CLR object, Stream handle initialised, putting on heap
 
 	/*
 	// Convert string command to an array of unsigned char
@@ -118,11 +119,15 @@ int Vehicle::checkData()
 
 int Vehicle::sendDataToSharedMemory()
 {
-	int flag = 0; // toggles to 1
+	
 	SendData = gcnew array<unsigned char>(1024); //initialisation
 	System::String^ Message = gcnew System::String("# ");
-	Message = Message + VCSMPtr->Steering.ToString("F3") + " " + VCSMPtr->Speed.ToString("F3") + flag + " #"; // sends data to weeder
-	SendData = Encoding::ASCII->GetBytes(Message);
+	Message = Message + VCSMPtr->Steering.ToString("F3") + " " + VCSMPtr->Speed.ToString("F3") + " " + flag + " #"; // sends data to weeder
+	SendData = System::Text::Encoding::ASCII->GetBytes(Message);
+
+	Stream->WriteByte(0x02);
+	Stream->Write(SendData, 0, SendData->Length);
+	Stream->WriteByte(0x03);
 
 	//print vc data
 	Console::WriteLine(Message);

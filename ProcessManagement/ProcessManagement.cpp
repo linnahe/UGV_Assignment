@@ -25,7 +25,7 @@ void StartProcesses();
 TCHAR Units[10][20] = //
 {
 	TEXT("Laser2.exe"),
-	TEXT("Display.exe"),
+	TEXT("Display2.exe"),
 	TEXT("Vehicle.exe"),
 	TEXT("GPS.exe"),
 	TEXT("Camera.exe")
@@ -53,29 +53,10 @@ int main()
 	QueryPerformanceFrequency((LARGE_INTEGER*)&Frequency);
 	QueryPerformanceCounter((LARGE_INTEGER*)&Counter);
 
-	/*array<UGVProcesses>^ ProcessList = gcnew array<UGVProcesses>
-	{
-		{"Laser", 1, 0, 10, gcnew Process},
-		{ "Display", 1, 0, 10, gcnew Process },
-		{ "Vehicle", 1, 0, 10, gcnew Process },
-		{ "GPS", 0, 0, 10, gcnew Process },
-		{ "Camera", 0, 0, 10, gcnew Process }
-	};
-	*/
-
 	// create and access shared memory
 	SMObject PMObj(_TEXT("PMObj"), sizeof(ProcessManagement));
 	PMObj.SMCreate();
 	PMObj.SMAccess();
-	/*
-	if (PMObj.SMCreate() == true) // check SMCreateError flag for error trapping
-	{
-		Console::WriteLine("Failed to create shared memory");
-	}
-	if (PMObj.SMAccess() == true) //check SMAccessError flag for error trapping
-	{
-		Console::WriteLine("Failed to access shared memory");
-	} */
 	ProcessManagement* PMSMPtr = (ProcessManagement*)PMObj.pData; // ptr to SM struct
 
 	// laser shared memory
@@ -118,7 +99,8 @@ int main()
 
 	while (1)
 	{
-		TimeStamp = (double)Counter / (double)Frequency * 1000; //typecast. milliseconds
+
+		PMSMPtr->PMTimeStamp = (double)Counter / (double)Frequency * 1000; //typecast. milliseconds
 		Console::WriteLine("Process Management time stamp : {0,12:F3} {1,12:X2}", TimeStamp, Shutdown); //0 is the first parameter, 12 is the feed rate, then 3 is the decimal places
 		Thread::Sleep(100);
 

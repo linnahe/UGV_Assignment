@@ -67,6 +67,17 @@ Vehicle * vehicle = NULL;
 double speed = 0;
 double steering = 0;
 
+// shared memory obj
+SMObject PMObj(TEXT("ProcessManagement"), sizeof(ProcessManagement));
+SMObject GPSObj(_TEXT("GPSObj"), sizeof(SM_GPS));
+SMObject LaserObj(_TEXT("LaserObj"), sizeof(SM_Laser));
+SMObject VehicleObj(_TEXT("VehicleObj"), sizeof(SM_VehicleControl));
+
+ProcessManagement* PMSMPtr = nullptr;
+SM_GPS* GPSSMPtr = nullptr;
+SM_Laser* LSMPtr = nullptr;
+SM_VehicleControl* VCSMPtr = nullptr;
+
 //int _tmain(int argc, _TCHAR* argv[]) {
 int main(int argc, char ** argv) {
 
@@ -104,9 +115,15 @@ int main(int argc, char ** argv) {
 	vehicle = new MyVehicle();
 
 	// shared memory
-	SMObject PMObj(_TEXT("PMObj"), sizeof(ProcessManagement));
 	PMObj.SMAccess();
-	ProcessManagement* PMSMPtr = (ProcessManagement*)PMObj.pData;
+	LaserObj.SMAccess();
+	GPSObj.SMAccess();
+	VehicleObj.SMAccess();
+	PMSMPtr = (ProcessManagement*)PMObj.pData;
+	LSMPtr = (SM_Laser*)LaserObj.pData;
+	GPSSMPtr = (SM_GPS*)GPSObj.pData;
+	VCSMPtr = (SM_VehicleControl*)VehicleObj.pData;
+	
 
 	// module flags
 	PMSMPtr->Shutdown.Flags.Display = false;
@@ -155,6 +172,8 @@ void display() {
 
 	// draw HUD
 	HUD::Draw();
+
+
 
 	glutSwapBuffers();
 };
@@ -253,6 +272,36 @@ void idle() {
 	}
 
 	display();
+
+	double TimeStamp;
+	__int64 Frequency, Counter;
+	int Shutdown = 0x00;
+
+	PMObj.SMCreate();
+	PMObj.SMAccess();
+
+	QueryPerformanceFrequency((LARGE_INTEGER*)&Frequency);
+	QueryPerformanceCounter((LARGE_INTEGER*)&Counter);
+	TimeStamp = (double)(Counter) / (double)Frequency * 1000; // ms
+	System::Threading::Thread::Sleep(25);
+	if (PMSMPtr->Shutdown.Status)
+		exit(0);
+	if (_kbhit())
+		exit(0);
+
+	if (PMSMPtr->Heartbeat.Flags.Display == 0
+	{
+		PMSMPtr->Heartbeat.Flags.Display = 1; 
+	}
+	else
+	{
+		if (TimeStamp - PMSMPtr->PMTimeStamp > 2000)
+		{
+			PMSMPtr->Shutdown.Status = 0xFF;
+			Console::Writeline("Process Management failed");
+			Console::WriteLine("{0,12:F3}", TimeStamp);
+		}
+	}
 
 #ifdef _WIN32 
 	Sleep(sleep_time_between_frames_in_seconds * 1000);

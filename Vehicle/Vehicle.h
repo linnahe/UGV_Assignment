@@ -3,6 +3,9 @@
 #include <UGV_module.h>
 #include <smstructs.h>
 
+unsigned long CRC32Value(int i);
+unsigned long CalculateBlockCRC32(unsigned long ulCount, unsigned char* ucBuffer);
+
 
 ref class Vehicle : public UGV_module // class inherits from UGV_module
 {
