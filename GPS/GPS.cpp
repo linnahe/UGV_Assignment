@@ -49,12 +49,18 @@ int main()
 	// shared memory objects
 	GPSMod.setupSharedMemory();
 
+	// initialise flags
+	PMSMPtr->Shutdown.Flags.GPS = false;
+	PMSMPtr->Heartbeat.Flags.GPS = true;
+	PMSMPtr->PMHeartbeat.Flags.GPS = false;
+
 	while (1)
 	{
 		GPSMod.setHeartbeat(PMSMPtr->Heartbeat.Flags.GPS);
 		// get GPS data 
 		while (!PMSMPtr->Shutdown.Flags.GPS)
 		{
+
 			GPSMod.getData();
 			if (GPSMod.checkData())
 			{
@@ -156,12 +162,14 @@ int GPS::getData()
 int GPS::checkData()
 {
 	BytePtr = (unsigned char*)&NovatelGPS;
-	unsigned int CalculatedCRC = CalculateBlockCRC32(108, BytePtr);
-	if (CalculatedCRC == NovatelGPS.Checksum) {
+	unsigned long CalculatedCRC = CalculateBlockCRC32(108, BytePtr);
+	if (NovatelGPS.Checksum == CalculatedCRC) {
 		//GPSSMPtr->northing = NovatelGPS.Northing;
 		//GPSSMPtr->easting = NovatelGPS.Easting;
 		//GPSSMPtr->height = NovatelGPS.Height;
-		Console::WriteLine("CHECKSUM LOOP" + i);
+		Console::WriteLine("CHECKSUM LOOP " + i);
+		Console::WriteLine("checksum is " + NovatelGPS.Checksum);
+		Console::WriteLine("Calculated CRC is " + CalculatedCRC);
 		i = i + 1;
 		return 1;
 	}

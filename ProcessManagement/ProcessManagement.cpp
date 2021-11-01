@@ -24,9 +24,9 @@ void StartProcesses();
 //defining start up sequence
 TCHAR Units[10][20] = //
 {
-	TEXT("Laser.exe"),
+	TEXT("Laser2.exe"),
 	TEXT("Display.exe"),
-	TEXT("Vehicle2.exe"),
+	TEXT("Vehicle.exe"),
 	TEXT("GPS.exe"),
 	TEXT("Camera.exe")
 };
@@ -133,7 +133,10 @@ int main()
 				PMSMPtr->Heartbeat.Flags.Laser = 0;
 			}
 			else {
-				PMSMPtr->Shutdown.Status = 0xFF; // shutdown; critical process
+				if (TimeStamp - PMSMPtr->PMTimeStamp > 2000) // if PMData->PMTimeStamp is processed between PM publishes its first time stamp, the reading will be wrong here
+				{
+					PMSMPtr->Shutdown.Status = 0xFF; // shutdown; critical process
+				}
 			}
 
 			// detect GPS heartbeat
@@ -141,9 +144,12 @@ int main()
 				PMSMPtr->Heartbeat.Flags.GPS = 0;
 			}
 			else {
-				PMSMPtr->Shutdown.Flags.GPS = 1;
-				// PMSMPtr->Shutdown.Status = 0xFF;
-				StartProcesses(); // restart non-critical process
+				if (TimeStamp - PMSMPtr->PMTimeStamp > 2000) // if PMData->PMTimeStamp is processed between PM publishes its first time stamp, the reading will be wrong here
+				{
+					PMSMPtr->Shutdown.Flags.GPS = 1;
+					// PMSMPtr->Shutdown.Status = 0xFF;
+					StartProcesses(); // restart non-critical process
+				}
 			}
 
 			// detect camera heartbeat
@@ -151,8 +157,11 @@ int main()
 				PMSMPtr->Heartbeat.Flags.Camera = 0;
 			}
 			else {
-				PMSMPtr->Shutdown.Flags.Camera = 1;
-				PMSMPtr->Shutdown.Status = 0xFF; // shutdown; critical process
+				if (TimeStamp - PMSMPtr->PMTimeStamp > 2000) // if PMData->PMTimeStamp is processed between PM publishes its first time stamp, the reading will be wrong here
+				{
+					PMSMPtr->Shutdown.Flags.Camera = 1;
+					PMSMPtr->Shutdown.Status = 0xFF; // shutdown; critical process
+				}
 			}
 
 			// detect vehicle heartbeat
@@ -160,8 +169,11 @@ int main()
 				PMSMPtr->Heartbeat.Flags.VehicleControl = 0;
 			}
 			else {
-				PMSMPtr->Shutdown.Flags.VehicleControl = 1;
-				PMSMPtr->Shutdown.Status = 0xFF; // shutdown; critical process
+				if (TimeStamp - PMSMPtr->PMTimeStamp > 2000) // if PMData->PMTimeStamp is processed between PM publishes its first time stamp, the reading will be wrong here
+				{
+					PMSMPtr->Shutdown.Flags.VehicleControl = 1;
+					PMSMPtr->Shutdown.Status = 0xFF; // shutdown; critical process
+				}
 			}
 
 			// detect display heartbeat
@@ -169,8 +181,11 @@ int main()
 				PMSMPtr->Heartbeat.Flags.Display = 0;
 			}
 			else {
-				PMSMPtr->Shutdown.Flags.Display = 1;
-				PMSMPtr->Shutdown.Status = 0xFF; // shutdown; critical process
+				if (TimeStamp - PMSMPtr->PMTimeStamp > 2000) // if PMData->PMTimeStamp is processed between PM publishes its first time stamp, the reading will be wrong here
+				{
+					PMSMPtr->Shutdown.Flags.Display = 1;
+					PMSMPtr->Shutdown.Status = 0xFF; // shutdown; critical process
+				}
 			}
 		}
 
