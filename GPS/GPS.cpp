@@ -47,7 +47,7 @@ int main()
 	// shared memory objects
 	GPSMod.setupSharedMemory();
 
-	while (!_kbhit())
+	while (1)
 	{
 		GPSMod.setHeartbeat(PMSMPtr->Heartbeat.Flags.GPS);
 		// get GPS data 
@@ -91,12 +91,13 @@ int GPS::connect(String^, int)
 
 int GPS::setupSharedMemory()
 {
-	SMObject PMObj(_TEXT("PMObj"), sizeof(ProcessManagement));
-	SMObject GPSObj(_TEXT("GPSObj"), sizeof(SM_GPS));
-	PMObj.SMAccess();
-	GPSObj.SMAccess();
-	ProcessManagement* PMSMPtr = (ProcessManagement*)PMObj.pData;
-	SM_GPS* GPSSMPtr = (SM_GPS*)GPSObj.pData;
+	ProcessManagementData = new SMObject(_TEXT("PMObj"), sizeof(ProcessManagement));
+	SensorData = new SMObject(_TEXT("LaserObj"), sizeof(SM_Laser));
+	ProcessManagementData->SMAccess();
+	SensorData->SMAccess();
+	PMSMPtr = (ProcessManagement*)ProcessManagementData->pData;
+	GPSSMPtr = (SM_GPS*)SensorData->pData;
+
 
 	return 1;
 }
@@ -168,7 +169,7 @@ int GPS::sendDataToSharedMemory()
 
 bool GPS::getShutdownFlag()
 {
-	bool flag = PMSMPtr->Shutdown.Flags.GPS;
+	bool flag = PMSMPtr->Shutdown.Status;
 	return flag;
 }
 

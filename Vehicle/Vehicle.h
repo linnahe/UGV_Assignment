@@ -19,5 +19,5 @@ public: //prefer to have function declarations in this file, then definitions in
 protected:
 	// YOUR CODE HERE (ADDITIONAL MEMBER VARIABLES THAT YOU MAY WANT TO ADD)
 	array<unsigned char>^ SendData;		// declaration
-
+	String^ StudID;
 };

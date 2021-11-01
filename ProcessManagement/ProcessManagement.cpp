@@ -65,6 +65,9 @@ int main()
 
 	// create and access shared memory
 	SMObject PMObj(_TEXT("PMObj"), sizeof(ProcessManagement));
+	PMObj.SMCreate();
+	PMObj.SMAccess();
+	/*
 	if (PMObj.SMCreate() == true) // check SMCreateError flag for error trapping
 	{
 		Console::WriteLine("Failed to create shared memory");
@@ -72,7 +75,7 @@ int main()
 	if (PMObj.SMAccess() == true) //check SMAccessError flag for error trapping
 	{
 		Console::WriteLine("Failed to access shared memory");
-	}
+	} */
 	ProcessManagement* PMSMPtr = (ProcessManagement*)PMObj.pData; // ptr to SM struct
 
 	// laser shared memory
@@ -94,19 +97,20 @@ int main()
 	SM_VehicleControl* VCSMPtr = (SM_VehicleControl*)VehicleObj.pData;
 
 
-	//start all 5 modules
-	StartProcesses();
-
 	// set flags at start of program
 	PMSMPtr->Shutdown.Status = 0x00;
 	PMSMPtr->Shutdown.Flags.ProcessManagement = false;
 	PMSMPtr->Heartbeat.Status = 0x00;		// set heartbeat for all modules
+
+	//start all 5 modules
+	StartProcesses();
 	
 	// while all modules are active, PM states it is active
+	/*
 	while (!(PMSMPtr->Heartbeat.Flags.Laser && PMSMPtr->Heartbeat.Flags.GPS && PMSMPtr->Heartbeat.Flags.VehicleControl && PMSMPtr->Heartbeat.Flags.Display && PMSMPtr->Heartbeat.Flags.Camera))
 	{
 		PMSMPtr->PMHeartbeat.Status = 0xFF;
-	}
+	} */
 
 	//time before starting processes
 	PMSMPtr->PMTimeStamp = (double)Stopwatch::GetTimestamp();
@@ -119,7 +123,7 @@ int main()
 		Thread::Sleep(100);
 
 		while (!PMSMPtr->Shutdown.Flags.ProcessManagement) { //while process management is active
-		// tell modules that pm is active
+			// tell modules that pm is active
 			PMSMPtr->PMHeartbeat.Status = 0xFF;
 
 			Thread::Sleep(100);
@@ -138,7 +142,7 @@ int main()
 				PMSMPtr->Heartbeat.Flags.GPS = 0;
 			}
 			else {
-				PMSMPtr->Shutdown.Flags.Display = 1;
+				PMSMPtr->Shutdown.Flags.GPS = 1;
 				// PMSMPtr->Shutdown.Status = 0xFF;
 				StartProcesses(); // restart non-critical process
 			}

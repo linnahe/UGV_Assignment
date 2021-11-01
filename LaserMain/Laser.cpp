@@ -17,8 +17,8 @@ using namespace System::Net;
 using namespace System::Text;
 
 // global ptrs
-ProcessManagement* PMSMPtr;
-SM_Laser* LSMPtr;
+ProcessManagement* PMSMPtr = NULL;
+SM_Laser* LSMPtr = NULL;
 
 int main()
 {
@@ -28,7 +28,7 @@ int main()
 	LaserMod.setupSharedMemory();
 	
 	//Loop
-	while (!_kbhit()) //put laser shutdown flag here to make it not shutdown
+	while (1) //put laser shutdown flag here to make it not shutdown
 	{
 		LaserMod.setHeartbeat(PMSMPtr->Heartbeat.Flags.Laser);
 		
@@ -94,13 +94,13 @@ int Laser::connect(String^ hostName, int portNumber)
 
 int Laser::setupSharedMemory()
 {
-	SMObject PMObj(_TEXT("PMObj"), sizeof(ProcessManagement));
-	SMObject LaserObj(_TEXT("LaserObj"), sizeof(SM_Laser));
-	PMObj.SMAccess();
-	LaserObj.SMCreate();
-	LaserObj.SMAccess();
-	ProcessManagement* PMSMPtr = (ProcessManagement*)PMObj.pData;
-	SM_Laser* LSMPtr = (SM_Laser*)LaserObj.pData;
+	ProcessManagementData = new SMObject(_TEXT("PMObj"), sizeof(ProcessManagement));
+	SensorData = new SMObject(_TEXT("LaserObj"), sizeof(SM_Laser));
+	ProcessManagementData->SMAccess();
+	// LaserObj.SMCreate();
+	SensorData->SMAccess();
+	PMSMPtr = (ProcessManagement*)ProcessManagementData->pData;
+	LSMPtr = (SM_Laser*)SensorData->pData;
 
 	return 1;
 }
@@ -164,7 +164,7 @@ int Laser::sendDataToSharedMemory()
 
 bool Laser::getShutdownFlag()
 {
-	bool flag = PMSMPtr->Shutdown.Flags.Laser;
+	bool flag = PMSMPtr->Shutdown.Status;
 	return flag;
 }
 

@@ -47,7 +47,7 @@ int main()
 int Vehicle::connect(String^ hostName, int portNumber)
 {
 	String^ AskScan = gcnew String("sRN LMDscandata"); //AskScan handle put on the heap
-	String^ StudID = gcnew String("5117757\n");
+	StudID = gcnew String("5117757\n");
 	// String to store received data for display
 	String^ ResponseData;
 
@@ -86,12 +86,12 @@ int Vehicle::connect(String^ hostName, int portNumber)
 
 int Vehicle::setupSharedMemory()
 {
-	SMObject PMObj(_TEXT("PMObj"), sizeof(ProcessManagement));
-	SMObject VObj(_TEXT("VObj"), sizeof(SM_VehicleControl));
-	PMObj.SMAccess();
-	VObj.SMAccess();
-	ProcessManagement* PMSMPtr = (ProcessManagement*)PMObj.pData;
-	SM_VehicleControl* VCSMPtr = (SM_VehicleControl*)VObj.pData;
+	ProcessManagementData = new SMObject(_TEXT("PMObj"), sizeof(ProcessManagement));
+	SensorData = new SMObject(_TEXT("LaserObj"), sizeof(SM_Laser));
+	ProcessManagementData->SMAccess();
+	SensorData->SMAccess();
+	PMSMPtr = (ProcessManagement*)ProcessManagementData->pData;
+	VCSMPtr = (SM_VehicleControl*)SensorData->pData;
 
 	return 1;
 }
@@ -99,7 +99,8 @@ int Vehicle::setupSharedMemory()
 int Vehicle::getData()
 {
 	// retrieve data from display
-	SendData = gcnew array<unsigned char>(16);
+	// SendData = gcnew array<unsigned char>(16);
+	SendData = System::Text::Encoding::ASCII->GetBytes(StudID);
 	Stream->Write(SendData, 0, SendData->Length);
 	// SendData = System::Text::Encoding::ASCII->GetBytes(ReadData);
 	Thread::Sleep(100);
@@ -129,7 +130,7 @@ int Vehicle::sendDataToSharedMemory()
 
 bool Vehicle::getShutdownFlag()
 {
-	bool flag = PMSMPtr->Shutdown.Flags.VehicleControl;
+	bool flag = PMSMPtr->Shutdown.Status;
 	return flag;
 }
 

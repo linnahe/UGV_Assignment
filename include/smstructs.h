@@ -40,12 +40,12 @@ struct SM_GPS
 
 struct UnitFlags
 {	//reorder this to match up with pm.cpp and garbage can have 3 bits
-	unsigned char	ProcessManagement : 1,	//NONCRITICAL
-					Laser : 1,				//NONCRITICAL
+	unsigned char	Laser : 1,	//NONCRITICAL
+					Display : 1,				//NONCRITICAL
 					VehicleControl : 1,		//NONCRITICAL
 					GPS : 1,				//NONCRITICAL
-					Display : 1,				//NONCRITICAL
 					Camera : 1,				//NONCRITICAL
+					ProcessManagement : 1,				//NONCRITICAL
 					Garbage : 2;
 }; //adds up to 8 bits
 
